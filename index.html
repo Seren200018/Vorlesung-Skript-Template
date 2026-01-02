@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <title>AV8_V1</title>
+  <link rel="icon" href="data:,">
   <script>
     MathJax = {
       tex: {
@@ -11,268 +12,199 @@
       }
     };
   </script>
-  <link href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" rel="stylesheet" type="text/css" />
-  <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js" type="text/javascript" charset="UTF-8"></script>  <!-- Normalize or reset CSS with your favorite library -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="src/Foldable.css" type="text/css" />
   <!-- Load paper.css for happy printing -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.4.1/paper.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/modified-paper.css" />
   <link href="https://latex.vercel.app/style.css" rel="stylesheet">
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
-  <script type="text/javascript" charset="UTF-8"
-          src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
-  <link rel="stylesheet"
-        type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
   <script type="text/javascript" charset="UTF-8">
     $SmjDisplayMath = [[ "\\[", "\\]" ] ];
     $SmjExtraInlineMath = [[ "\\(", "\\)" ] ]
   </script>
 
-  <!-- Set page size here: A5, A4 or A3 -->
-  <!-- Set also "landscape" if you need -->
-  <style>@page {
-    size: A5;
-    page-break-after: right;
-  }
-  :root {
-    --lt-color-gray-100: #f8f9fc;
-    --lt-color-gray-200: #f1f3f9;
-    --lt-color-gray-300: #dee3ed;
-    --lt-color-gray-400: #c2c9d6;
-    --lt-color-gray-500: #8f96a3;
-    --lt-color-gray-600: #5e636e;
-    --lt-color-gray-700: #2f3237;
-    --lt-color-gray-800: #1d1e20;
-    --lt-color-gray-900: #111213;
-    --lt-color-white: #fff !important;
-    --lt-color-black: #111213 !important;
-    --lt-color-transparent: rgba(255, 255, 255, 0) !important;
-    --lt-color-background-light: var(--lt-color-gray-100) !important;
-    --lt-color-background-default: var(--lt-color-gray-200) !important;
-    --lt-color-background-dark: var(--lt-color-gray-300) !important;
-    --lt-color-border-light: var(--lt-color-gray-200) !important;
-    --lt-color-border-default: var(--lt-color-gray-300) !important;
-    --lt-color-border-dark: var(--lt-color-gray-400) !important;
-    --lt-color-text-very-light: var(--lt-color-gray-500) !important;
-    --lt-color-text-light: var(--lt-color-gray-600) !important;
-    --lt-color-text-default: var(--lt-color-gray-700) !important;
-    --lt-color-text-dark: var(--lt-color-gray-800) !important;
-    --lt-color-overlay-default: #fff !important;
-    --lt-color-overlay-dark: #fff !important;
-    --lt-color-overlay-transparent: rgba(0, 0, 0, 0.1) !important;
-    --lt-shadow-website-overlay: 0 0 7px 0 rgba(0, 0, 0, 0.3) !important;
-    --lt-shadowDefault: 0 2px 6px -1px rgba(0, 0, 0, 0.16), 0 1px 4px -1px rgba(0, 0, 0, 0.04);
-    --lt-shadowActive: 8 0 8px -2px rgba(0, 0, 0, 0.1), 0 6px 20px -3px rgba(0, 0, 0, 0.2);
-    outline: none !important;
-  }
-  .sheet {
-    page-break-after: right;
-    font-size: 1rem;
-  }
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+  <script src="src/template.js"></script>
+  <script type="module">
+    import { renderRoughTemplate, renderMassSpringDamper } from "./src/rough-template.js";
+    import { initJsxGraphDemo } from "./src/jsx-graph-demo.js";
+    window.addEventListener("DOMContentLoaded", () => {
+      const target = document.getElementById("sketch-template-demo");
+      if (target) {
+        renderRoughTemplate(target, {
+          width: 450,
+          height: 300,
+          title: "Rough.js Skizze",
+          subtitle: "Anpassbare Vorlage",
+        });
+      }
 
-  .sheet.behind {
-    background-color: #efefff;
-  }
+      const msd = document.getElementById("msd-sketch");
+      if (msd) {
+        renderMassSpringDamper(msd, {
+          width: 450,
+          height: 180,
+          massLabel: "m",
+          springLabel: "k",
+          damperLabel: "c",
+          forceLabel: "F(t)",
+        });
+      }
 
-  .sheet.behind:hover {
-    box-shadow: 0 2mm 8mm rgba(200, 200, 0, .6);
-  }
+      const jsxDemo = document.getElementById("jsx-graph-demo");
+      if (jsxDemo) {
+        initJsxGraphDemo("jsx-graph-demo");
+      }
+    });
+  </script>
 
-
-
-  video {
-    object-fit: fill;
-  }
-  </style>
-  <style>
-
-
-    .Titlepage.Background {
-      background-repeat: no-repeat;
-
-      background: url(img/bg_gif/generated_video.webp) no-repeat;
-      background-size: cover;
-
-    }
-
-    .Titlepage.Series {
-      font-family: Arial, Helvetica, sans-serif;
-      font-style: italic;
-      color: white;
-      position: relative;
-      top: 2cm;
-      line-height: 1cm;
-      font-size: 30px;
-      font-weight: 500;
-      text-align: center
-    }
-
-    .Titlepage.Title {
-      font-family: Arial, Helvetica, sans-serif;
-      position: relative;
-      color: white;
-      top: 6cm;
-      line-height: 1cm;
-      font-size: 40px;
-      font-weight: 900;
-      text-align: center
-    }
-    .Titlepage.Subtitle {
-      font-style: italic;
-      font-family: Arial, Helvetica, sans-serif;
-      position: relative;
-      color: white;
-      word-wrap: break-word;
-      margin-left: 1cm;
-      margin-right: 1cm;
-      top: 6.5cm;
-      line-height: 1cm;
-      font-size: 20px;
-      font-weight: 500;
-      text-align: center
-    }
-    .Titlepage.Name {
-      font-family: Arial, Helvetica, sans-serif;
-      font-style: italic;
-      color: white;
-      position: relative;
-      top: 12cm;
-      line-height: 1cm;
-      font-size: 15px;
-      font-weight: 500;
-      text-align: center
-    }
-    h1 {
-      display: block;
-      font-size: 1.5em;
-      line-height: 0.7cm;
-      margin-top: 0.67em;
-      margin-bottom: 0.67em;
-      margin-left: 0;
-      margin-right: 0;
-      font-weight: bold;
-    }
-
-
-
-  </style>
 </head>
 
 <!-- Set "A5", "A4" or "A3" for class name -->
 <!-- Set also "landscape" if you need -->
-<body class="A5 libertinus">
+<body class="A4 libertinus">
+<button id="print-open" class="print-trigger">Drucken/Speichern</button>
+<div id="subsheet-panel">
+  <button id="subsheet-close">✕</button>
+  <div id="subsheet-content"></div>
+</div>
 
+<div id="main-layout">
 <!-- Each sheet element should have the class "sheet" -->
 <!-- "padding-**mm" is optional: you can set 10, 15, 20 or 25 -->
 <section class="sheet Titlepage Background">
-
-
-  <!-- Write HTML just like a web page -->
+  <div class="title-bg">
+    <img src="img/generated_video.gif" alt="">
+  </div>
   <div class="abstract">
     <p class="Titlepage Series">
-      Skript <br> Aktive Vibrationskontrolle
+      Kurs / Skript
     </p>
-    <p class="Titlepage Title"> Vorlesung 8 <br> Tilger
+    <p class="Titlepage Title"> Titel der Veranstaltung
     </p>
     <p class="Titlepage Subtitle">
-      Wenn einer ausrastet damit der andere stehenbleibt
+      Untertitel oder Beschreibung
     </p>
     <p
-            style="font-family: Arial, Helvetica, sans-serif;font-style: italic; color: white;position: relative; top: 12cm; line-height: 1cm; font-size: 15px; font-weight: 500;text-align:center">
-      Dr.-Ing. Christian Pommer
+      style="font-family: Arial, Helvetica, sans-serif;font-style: italic; color: white;position: relative; top: 12cm; line-height: 1cm; font-size: 15px; font-weight: 500;text-align:center">
+      Autor / Dozent
     </p>
   </div>
-
 </section>
 
-<!-- The second sheet -->
-<section class="sheet libertinus padding-10mm">
-
-  <!-- Write HTML just like a web page -->
+<!-- Table of contents -->
+<section class="sheet libertinus padding-20mm">
   <article>Inhaltsverzeichnis</article>
-
+  <ol id="toc-list" class="toc-list"></ol>
 </section>
 
-<section class="sheet libertinus padding-10mm">
-
-  <!-- Write HTML just like a web page -->
+<!-- Example chapter 1 -->
+<section class="sheet libertinus padding-20mm" data-symbols="F: Kraft; m: Masse; a: Beschleunigung">
   <div class="abstract">
-    <h1>Zurück zum Einmassenschwinger!</h1>
+    <h1 data-toc="Kapitel 1">Einleitung</h1>
   </div>
-  Der Einmassenschwinger bildet das einfacste Schwingfähige Element der Dynamik.
-  Seine Bewegungsgleichung lautet:
-  \begin{equation}
-  m\ddot{x}+k\dot{x}+kx=F_A
-  \end{equation}
-
-  <div id="app"  class="jxgbox" style='border:None;overflow:hidden; width:300px; height:200px;' ></div>
-  <div id="app2"  class="jxgbox" style='border:None;width:300px; height:300px;' ></div>
-
-  <script type="module" src="src/SpringMassDamper.mjs"></script>
-
-</section>
-
-<section class="sheet libertinus padding-10mm">
   <div>
-    <div id="app3"  class="jxgbox" style='border:None;width:300px; height:300px;' ></div>
-    <div id="gd"></div>
-
+    Kurzer Einführungstext für dieses Kapitel. Beschreibe hier Inhalt oder Lernziele.
+    \begin{equation}
+      F = m \cdot a
+    \end{equation}
+    <figure data-figure="Beispielabbildung 1">
+      <img src="img/generated_video.gif" alt="Beispielbild" style="width:60mm; height:auto;">
+      <figcaption>Beispielabbildung 1</figcaption>
+    </figure>
+    <div class="image-caption" style="text-align:left; margin-bottom:2mm;"><strong>Tabelle:</strong> Beispieltabelle 1</div>
+    <table data-table="Beispieltabelle 1" style="width:100%; border-collapse:collapse;">
+      <tr><th style="border:1px solid #ccc;">A</th><th style="border:1px solid #ccc;">B</th></tr>
+      <tr><td style="border:1px solid #ccc;">1</td><td style="border:1px solid #ccc;">2</td></tr>
+    </table>
   </div>
-  <canvas id="canvas" width="200" height="500">
-  </canvas>
 </section>
 
-<section class="sheet libertinus padding-10mm">
-  <object id = "svg"  data="./img/smd.svg" type="image/svg+xml">
-  </object>
+<!-- Example chapter 2 with subsheets -->
+<section class="sheet libertinus padding-20mm" data-symbols="p: Druck; V: Volumen; T: Temperatur; n: Stoffmenge">
+  <div class="abstract">
+    <h1 data-toc="Kapitel 2">Beispielkapitel</h1>
+  </div>
+  <div>
+    Nutzen Sie diesen Bereich für Inhalte, Tabellen oder Formeln.
+    \begin{equation}
+      p \cdot V = n \cdot R \cdot T
+    \end{equation}
+  </div>
 
+  <!-- Sub-page MUST be wrapped -->
+  <div class="sub-stack">
+    <div class="sub-page-wrapper" style="--i:0">
+      <div class="sub-page-sheet">
+        <div class="paper-bg"></div>
+        <div class="content">Sub-Sheet Beispiel 1</div>
+      </div>
+    </div>
+
+    <div class="sub-page-wrapper" style="--i:1">
+      <div class="sub-page-sheet">
+        <div class="paper-bg"></div>
+        <div class="content">Sub-Sheet Beispiel 2</div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<section class="sheet libertinus padding-10mm">
-
+<!-- Rough.js Sketch Template demo -->
+<section class="sheet libertinus padding-20mm">
+  <article>Sketch Template (Rough.js)</article>
+  <figure data-figure="Skizzierte Layout-Vorlage (Rough.js)">
+    <div id="sketch-template-demo" class="sketch-template"></div>
+    <figcaption class="image-caption">Abb. 1: Skizzierte Layout-Vorlage (Rough.js)</figcaption>
+  </figure>
 </section>
 
-<section class="sheet libertinus padding-10mm">
-  <style>
-    #ABC {
-      outline: 2px dashed lime;
-      width: 200px;
-      height: 100px;
-    }
-  </style>
-<div id="ABC">
-  <style>
-    #foldWrapper {
-      outline: 2px dashed lime;
-      width: 200px;
-      height: 100px;
-    }
-  </style>
-  <style>
-    #foldBottom {
-      outline: 2px dashed lime;
-      width: 200px;
-      height: 100px;
-    }
-  </style>
+<!-- Mass-Spring-Damper Sketch -->
+<section class="sheet libertinus padding-20mm">
+  <article>Mass-Spring-Damper (Rough.js)</article>
+  <figure data-figure="Skizzierte Masse-Feder-Dämpfer">
+    <div id="msd-sketch" class="sketch-template"></div>
+    <figcaption class="image-caption">Abb. 2: Skizzierte Masse-Feder-Dämpfer</figcaption>
+  </figure>
+</section>
+
+<!-- JSXGraph animated demo -->
+<section class="sheet libertinus padding-20mm">
+  <article>JSXGraph Animation*</article>
+  <figure data-figure="Animierter Graph (JSXGraph)">
+    <div id="jsx-graph-demo" style="width: 120mm; height: 80mm; border: 1px dashed #ccc;"></div>
+    <figcaption class="image-caption">Abb. 3: Animierter Graph (JSXGraph) <small>*JSXGraph</small></figcaption>
+  </figure>
+</section>
+
+<!-- Blank sheet for further content -->
+<section class="sheet libertinus padding-20mm">
+</section>
+
+<!-- Verzeichnisse -->
+<section class="sheet libertinus padding-20mm">
+  <article><strong>Abbildungsverzeichnis</strong></article>
+  <ol id="fig-list" class="toc-list"></ol>
+  <article><strong>Tabellenverzeichnis</strong></article>
+  <ol id="table-list" class="toc-list"></ol>
+</section>
+
+<!-- Print modal -->
+<div id="print-modal" class="print-modal" hidden>
+  <div class="print-modal__dialog">
+    <h3>Drucken/Speichern</h3>
+    <label class="print-modal__option">
+      <input type="checkbox" id="print-include-subsheets" checked>
+      Sub-Sheets mitdrucken
+    </label>
+    <div class="print-modal__actions">
+      <button id="print-save" type="button">Offline speichern</button>
+      <button id="print-confirm" type="button">Drucken</button>
+      <button id="print-cancel" type="button">Abbrechen</button>
+    </div>
+  </div>
 </div>
-  <div id="foldWrapper">TEST</div>
-  <div id="foldBottom"><div id="app4" width="300" height="300" style="background: transparent;"></div>
-    <canvas id="canvas_app4"></canvas></div>
-  <script>
-    const main = document.getElementById('ABC');
-    const foldWrapper = document.getElementById('foldWrapper');
-    const foldBottom = document.getElementById('foldBottom');
-
-    main.addEventListener('click', () => {
-      console.log("Clicked!")
-      main.classList.toggle('moved');
-      foldWrapper.classList.toggle('show');
-      foldBottom.classList.toggle('folded');
-    });
-  </script>
-</section>
+</div>
 </body>
 </html>
 <!--

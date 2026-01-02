@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import { setupCounter } from './counter.js'
 import { ReactDom,React,  useState } from "react";
 import "../css/style.css";
+import anime from 'animejs/lib/anime.es.js';
 
 // Funktion: Ruft die aktuelle Scroll-Position ab
 document.getScroll = function () {
@@ -23,6 +24,41 @@ document.getScroll = function () {
 };
 export default function FoldingLayout() {
     const [isOpen, setIsOpen] = useState(false);
+    const [isSubPageOpen, setIsSubPageOpen] = useState(false);
+
+    const handleSubPageClick = () => {
+        if (!isSubPageOpen) {
+            // Animate main page to fade out, sub page to slide left
+            anime({
+                targets: '.fold-wrapper',
+                opacity: 0,
+                duration: 600,
+                easing: 'easeInOutQuad'
+            });
+            anime({
+                targets: '.sub-page-sheet',
+                translateX: -290,
+                duration: 600,
+                easing: 'easeInOutQuad'
+            });
+            setIsSubPageOpen(true);
+        } else {
+            // Close sub page
+            anime({
+                targets: '.fold-wrapper',
+                opacity: 1,
+                duration: 600,
+                easing: 'easeInOutQuad'
+            });
+            anime({
+                targets: '.sub-page-sheet',
+                translateX: 10,
+                duration: 600,
+                easing: 'easeInOutQuad'
+            });
+            setIsSubPageOpen(false);
+        }
+    };
 
     return (
         <div className="layout">
@@ -32,7 +68,20 @@ export default function FoldingLayout() {
 
             <div className={`fold-wrapper ${isOpen ? "show" : ""}`}>
                 <div className={`fold-top`}>Top Half</div>
-                <div className={`fold-bottom ${isOpen ? "folded" : ""}`}>Bottom Half</div>
+                <div className={`fold-bottom ${isOpen ? "folded" : ""}`} onClick={handleSubPageClick}>Bottom Half</div>
+            </div>
+
+            <div className={`sub-page-sheet ${isOpen ? 'visible' : ''} ${isSubPageOpen ? 'open' : ''} explanation-sheet libertinus padding-10mm`}>
+                <div className="sub-page-content">
+                    <div className="sub-page-item">
+                        <h2>Explanation 1</h2>
+                        <p>This is the first explanation sheet.</p>
+                    </div>
+                    <div className="sub-page-item">
+                        <h2>Explanation 2</h2>
+                        <p>This is the second explanation sheet.</p>
+                    </div>
+                </div>
             </div>
         </div>
     );

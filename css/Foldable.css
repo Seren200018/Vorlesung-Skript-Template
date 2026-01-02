@@ -29,6 +29,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+    z-index: 2;
 }
 
 .fold-wrapper.show {
@@ -62,4 +63,21 @@
 
 .fold-bottom.folded {
     transform: rotateX(0deg);
+}
+
+.sub-page-content {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.sub-page-item {
+    min-height: 180px;
+    margin-bottom: 10px;
+    background: #fefefe;
+    border: 1px solid #ddd;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
