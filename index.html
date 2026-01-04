@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <title>AV8_V1</title>
   <link rel="icon" href="data:,">
+  <!-- MathJax setup for LaTeX rendering; tag style can be overridden in settings.js -->
   <script>
     MathJax = {
       tex: {
@@ -13,7 +14,7 @@
     };
   </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css" rel="stylesheet">
-  <!-- Load paper.css for happy printing -->
+  <!-- Paper.css variant for print-ready layouts -->
   <link rel="stylesheet" href="css/modified-paper.css" />
   <link href="https://latex.vercel.app/style.css" rel="stylesheet">
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -22,10 +23,15 @@
     $SmjExtraInlineMath = [[ "\\(", "\\)" ] ]
   </script>
 
+  <!-- JSXGraph (interactive diagrams) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
   <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
-  <script src="src/template.js"></script>
+  <!-- Global settings and template runtime -->
+  <script src="src/settings.js"></script> <!-- default metadata/audio/theme config -->
+  <script src="src/symbol-settings.js"></script> <!-- optional custom symbol legends -->
+  <script src="src/template.js"></script> <!-- builds TOC, audio, print/export logic -->
   <script type="module">
+    // Demo sketches; safe to remove if not needed
     import { renderRoughTemplate, renderMassSpringDamper } from "./src/rough-template.js";
     import { initJsxGraphDemo } from "./src/jsx-graph-demo.js";
     window.addEventListener("DOMContentLoaded", () => {
@@ -62,17 +68,24 @@
 
 <!-- Set "A5", "A4" or "A3" for class name -->
 <!-- Set also "landscape" if you need -->
-<body class="A4 libertinus">
-<button id="print-open" class="print-trigger">Drucken/Speichern</button>
+<!-- Body data-* attributes override settings.js defaults without editing JS -->
+<body class="A4 libertinus"
+      data-repo-url="https://github.com/Seren200018/Vorlesung-Skript-Template"
+      data-git-last-mod="2026-01-02T23:36:56+01:00"
+      data-author="Autor / Dozent"
+      data-license="CC BY-NC 4.0">
+<!-- Right-side panel that opens cloned subsheets -->
 <div id="subsheet-panel">
   <button id="subsheet-close">✕</button>
   <div id="subsheet-content"></div>
 </div>
 
+<!-- Main printable layout; each .sheet becomes a page -->
 <div id="main-layout">
 <!-- Each sheet element should have the class "sheet" -->
 <!-- "padding-**mm" is optional: you can set 10, 15, 20 or 25 -->
-<section class="sheet Titlepage Background">
+<!-- Title page: background image plus hero metadata -->
+<section class="sheet Titlepage Background" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Intro Audio">
   <div class="title-bg">
     <img src="img/generated_video.gif" alt="">
   </div>
@@ -92,19 +105,107 @@
   </div>
 </section>
 
-<!-- Table of contents -->
-<section class="sheet libertinus padding-20mm">
-  <article>Inhaltsverzeichnis</article>
+<!-- Repository info + print/audio/theme controls -->
+<section class="sheet libertinus padding-20mm qr-info-sheet" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Repository Audio">
+  <div class="qr-info-header">
+    <h1>Repository &amp; Metadaten</h1>
+    <p>Scan oder Link zum GitHub-Repository sowie aktuelle Build-Informationen.</p>
+  </div>
+  <div class="qr-info-grid">
+    <div class="repo-qr-card">
+      <img src="img/github-qr.png" alt="QR-Code zum GitHub-Repository">
+      <p class="repo-qr__caption">GitHub Repository</p>
+      <a class="repo-qr__url" data-build-target="repo" href="https://github.com/Seren200018/Vorlesung-Skript-Template" target="_blank" rel="noreferrer noopener">
+        github.com/Seren200018/Vorlesung-Skript-Template
+      </a>
+    </div>
+    <div class="build-meta">
+      <h2>Build-Informationen</h2>
+      <dl>
+        <div class="build-meta__row">
+          <dt>Letzte Änderung</dt>
+          <dd data-build-target="date">–</dd>
+        </div>
+        <div class="build-meta__row">
+          <dt>Autor</dt>
+          <dd data-build-target="author">–</dd>
+        </div>
+        <div class="build-meta__row">
+          <dt>Copyright</dt>
+          <dd data-build-target="copyright">–</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="qr-controls">
+      <h2>Dokument-Einstellungen</h2>
+      <div class="qr-controls__group">
+        <div class="qr-controls__label">Druck</div>
+        <label class="qr-radio">
+          <input type="radio" name="print-include-subsheets" id="print-include-subsheets-yes" value="yes" checked>
+          Sub-Sheets mitdrucken
+        </label>
+        <label class="qr-radio">
+          <input type="radio" name="print-include-subsheets" id="print-include-subsheets-no" value="no">
+          Nur Hauptseiten
+        </label>
+        <label class="qr-radio">
+          <input type="checkbox" id="print-include-fullcode-main">
+          Vollständige Codes nach den Sheets mitdrucken
+        </label>
+      </div>
+      <div class="qr-controls__actions">
+        <button id="print-confirm" class="print-trigger">Drucken</button>
+        <button id="print-save" class="print-trigger">Offline speichern</button>
+      </div>
+      <div class="qr-controls__group">
+        <div class="qr-controls__label">Audio</div>
+        <label class="qr-radio">
+          <input type="radio" name="audio-mode" value="off">
+          Deaktiviert
+        </label>
+        <label class="qr-radio">
+          <input type="radio" name="audio-mode" value="manual" checked>
+          Manuell
+        </label>
+        <label class="qr-radio">
+          <input type="radio" name="audio-mode" value="autoplay">
+          Autoplay (Browser kann blockieren)
+        </label>
+      </div>
+      <div class="qr-controls__group">
+        <div class="qr-controls__label">Darstellung</div>
+        <label class="qr-radio">
+          <input type="radio" name="theme-mode" value="light" checked>
+          Hell
+        </label>
+        <label class="qr-radio">
+          <input type="radio" name="theme-mode" value="dark">
+          Dunkel
+        </label>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Auto-built table of contents -->
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Inhaltsverzeichnis Audio">
+  <article><strong>Inhaltsverzeichnis</strong></article>
   <ol id="toc-list" class="toc-list"></ol>
 </section>
 
-<!-- Example chapter 1 -->
-<section class="sheet libertinus padding-20mm" data-symbols="F: Kraft; m: Masse; a: Beschleunigung">
+<!-- Example chapter 1 (shows figure/table/DOI hooks and math rendering) -->
+<section class="sheet libertinus padding-20mm" data-symbols="F: Kraft; m: Masse; a: Beschleunigung" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 1 Audio">
   <div class="abstract">
     <h1 data-toc="Kapitel 1">Einleitung</h1>
   </div>
   <div>
     Kurzer Einführungstext für dieses Kapitel. Beschreibe hier Inhalt oder Lernziele.
+    <span class="doi-citation"
+          data-author="Sinapius"
+          data-year="2023"
+          data-pages="S211-S244"
+          data-title="Aktive Strukturdämpfung für Leichtbausysteme"
+          data-doi="10.1000/sinapius-2023-211"></span>
     \begin{equation}
       F = m \cdot a
     \end{equation}
@@ -120,13 +221,26 @@
   </div>
 </section>
 
-<!-- Example chapter 2 with subsheets -->
-<section class="sheet libertinus padding-20mm" data-symbols="p: Druck; V: Volumen; T: Temperatur; n: Stoffmenge">
+<!-- Example chapter 2 with subsheets and video/DOI hooks -->
+<section class="sheet libertinus padding-20mm" data-symbols="p: Druck; V: Volumen; T: Temperatur; n: Stoffmenge" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 2 Audio">
   <div class="abstract">
     <h1 data-toc="Kapitel 2">Beispielkapitel</h1>
   </div>
   <div>
-    Nutzen Sie diesen Bereich für Inhalte, Tabellen oder Formeln.
+    Nutzen Sie diesen Bereich für Inhalte, Tabellen oder Formeln. Weitere Quellen lassen sich ebenso referenzieren wie
+    <span class="doi-citation"
+          data-author="Müller"
+          data-year="2022"
+          data-pages="S88-S104"
+          data-title="Dynamische Systeme und adaptive Regelung"
+          data-doi="10.1000/mueller-2022-88"></span>.
+    <figure class="video-entry"
+            data-video-id="dQw4w9WgXcQ"
+            data-video-title="Demo: Systemdynamik"
+            data-video-caption="Kurze Videobeschreibung">
+      <div class="video-frame"></div>
+      <figcaption>Demo: Systemdynamik</figcaption>
+    </figure>
     \begin{equation}
       p \cdot V = n \cdot R \cdot T
     \end{equation}
@@ -151,7 +265,7 @@
 </section>
 
 <!-- Rough.js Sketch Template demo -->
-<section class="sheet libertinus padding-20mm">
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Sketch Audio">
   <article>Sketch Template (Rough.js)</article>
   <figure data-figure="Skizzierte Layout-Vorlage (Rough.js)">
     <div id="sketch-template-demo" class="sketch-template"></div>
@@ -160,7 +274,7 @@
 </section>
 
 <!-- Mass-Spring-Damper Sketch -->
-<section class="sheet libertinus padding-20mm">
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="MSD Audio">
   <article>Mass-Spring-Damper (Rough.js)</article>
   <figure data-figure="Skizzierte Masse-Feder-Dämpfer">
     <div id="msd-sketch" class="sketch-template"></div>
@@ -169,7 +283,7 @@
 </section>
 
 <!-- JSXGraph animated demo -->
-<section class="sheet libertinus padding-20mm">
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="JSXGraph Audio">
   <article>JSXGraph Animation*</article>
   <figure data-figure="Animierter Graph (JSXGraph)">
     <div id="jsx-graph-demo" style="width: 120mm; height: 80mm; border: 1px dashed #ccc;"></div>
@@ -177,16 +291,124 @@
   </figure>
 </section>
 
-<!-- Blank sheet for further content -->
+<!-- Python integration demo: short preview + expandable full script -->
 <section class="sheet libertinus padding-20mm">
+  <article>Python-Integration für Studierende</article>
+  <p>Dieses Beispiel zeigt, wie ein kurzer Ausschnitt angezeigt wird, während das komplette Skript kopiert oder eingeblendet werden kann.</p>
+  <div class="code-card python-script-block">
+    <div class="code-card__meta">
+      <span class="code-lang">Python</span>
+      <span class="code-title">CSV-Auswertung</span>
+    </div>
+    <pre class="code-preview"><code>import csv
+from statistics import mean
+
+with open("messwerte.csv") as fh:
+    reader = csv.DictReader(fh)
+    temperatur = [float(row["temperatur"]) for row in reader]
+
+print(f"Mittelwert: {mean(temperatur):.2f} °C")</code></pre>
+    <pre class="code-full"><code>import csv
+from pathlib import Path
+from statistics import mean
+
+
+def load_temperatures(path: Path) -> list[float]:
+    with path.open() as fh:
+        reader = csv.DictReader(fh)
+        return [float(row["temperatur"]) for row in reader if "temperatur" in row]
+
+
+def summarize(values: list[float]) -> dict[str, float]:
+    return {
+        "anzahl": len(values),
+        "minimum": min(values),
+        "maximum": max(values),
+        "mittelwert": mean(values),
+    }
+
+
+def main() -> None:
+    data_file = Path("messwerte.csv")
+    temps = load_temperatures(data_file)
+    summary = summarize(temps)
+    print("Temperaturauswertung")
+    for key, val in summary.items():
+        if isinstance(val, float):
+            print(f"{key:>10}: {val:.2f}")
+        else:
+            print(f"{key:>10}: {val}")
+
+    # Bewegter Durchschnitt über Fenster
+    window = 5
+    moving_avg = []
+    for idx in range(len(temps)):
+        start = max(0, idx - window + 1)
+        chunk = temps[start : idx + 1]
+        moving_avg.append(mean(chunk))
+    print("\nGleitender Mittelwert (letzte 5 Messpunkte):")
+    for i, val in enumerate(moving_avg, start=1):
+        print(f"{i:>3}: {val:>7.2f}")
+
+    # Einfache Anomalie-Erkennung
+    threshold = summary["mittelwert"] + 2.5
+    anomalies = [(i, t) for i, t in enumerate(temps, start=1) if t > threshold]
+    if anomalies:
+        print("\nAuffällige hohe Werte:")
+        for idx, val in anomalies:
+            print(f"  Messung {idx}: {val:.2f} °C")
+    else:
+        print("\nKeine auffälligen Werte gefunden.")
+
+    # Export als einfache Textzusammenfassung
+    report = Path("temperatur_report.txt")
+    lines = [
+        "Temperaturreport",
+        f"Datei: {data_file.name}",
+        f"Anzahl: {summary['anzahl']}",
+        f"Minimum: {summary['minimum']:.2f}",
+        f"Maximum: {summary['maximum']:.2f}",
+        f"Mittelwert: {summary['mittelwert']:.2f}",
+        "",
+        "Gleitender Mittelwert:",
+    ]
+    lines.extend(f"{i}: {val:.2f}" for i, val in enumerate(moving_avg, start=1))
+    lines.append("")
+    lines.append("Anomalien:")
+    if anomalies:
+        lines.extend(f"{idx}: {val:.2f}" for idx, val in anomalies)
+    else:
+        lines.append("keine")
+    report.write_text("\n".join(lines), encoding="utf-8")
+    print(f"\nReport gespeichert in {report.resolve()}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+    <p class="code-hint">Tipp: Mit dem Button kopieren Studierende das ganze Skript, auch wenn nur der Ausschnitt sichtbar ist.</p>
+  </div>
 </section>
 
-<!-- Verzeichnisse -->
-<section class="sheet libertinus padding-20mm">
+<!-- Blank sheet for further content -->
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Blank Audio">
+</section>
+
+<!-- Auto-filled figure/table/video/literature lists -->
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Abbildungs- und Tabellenverzeichnis Audio">
   <article><strong>Abbildungsverzeichnis</strong></article>
   <ol id="fig-list" class="toc-list"></ol>
   <article><strong>Tabellenverzeichnis</strong></article>
   <ol id="table-list" class="toc-list"></ol>
+</section>
+
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Videoliste Audio">
+  <article><strong>Videoliste</strong></article>
+  <ol id="video-list" class="toc-list video-list"></ol>
+</section>
+
+<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Literaturverzeichnis Audio">
+  <article><strong>Literaturverzeichnis</strong></article>
+  <ol id="literature-list" class="literature-list"></ol>
 </section>
 
 <!-- Print modal -->
@@ -196,6 +418,10 @@
     <label class="print-modal__option">
       <input type="checkbox" id="print-include-subsheets" checked>
       Sub-Sheets mitdrucken
+    </label>
+    <label class="print-modal__option">
+      <input type="checkbox" id="print-include-fullcode">
+      Vollständige Codes nach den Sheets mitdrucken
     </label>
     <div class="print-modal__actions">
       <button id="print-save" type="button">Offline speichern</button>
@@ -207,16 +433,3 @@
 </div>
 </body>
 </html>
-<!--
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
-</html>-->
