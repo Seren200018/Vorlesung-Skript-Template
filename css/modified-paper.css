@@ -52,6 +52,107 @@ body.panel-open #main-layout {
 }
 
 /* =========================================================
+   TABLES (ZEBRA ROW + SOFT COLUMN SHADE)
+   ========================================================= */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: none;
+  margin: 4mm 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+}
+
+th,
+td {
+  padding: 2.2mm 3mm;
+  text-align: left;
+  vertical-align: top;
+  border: none !important;
+  border-right: 1px solid #e5e7eb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+th {
+  background: #ffedd5;
+  color: #9a3412;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+tbody tr:nth-child(odd) {
+  background: #f8fafc;
+}
+
+tbody tr:nth-child(even) {
+  background: #ffffff;
+}
+
+tbody tr:hover td {
+  background: #e2e8f0;
+}
+
+table caption {
+  caption-side: top;
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: 2mm;
+}
+
+body.theme-dark table {
+  color: #e5e7eb;
+}
+
+body.theme-dark tbody tr:nth-child(odd) {
+  background: #0b1220;
+}
+
+body.theme-dark tbody tr:nth-child(even) {
+  background: #111827;
+}
+
+body.theme-dark tbody tr:hover td {
+  background: #1f2937;
+}
+
+body.theme-dark th {
+  background: #7c2d12;
+  color: #fff7ed;
+}
+
+table,
+th,
+td,
+tbody tr {
+  border: none !important;
+}
+
+tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+tbody td:last-child,
+th:last-child {
+  border-right: none !important;
+}
+
+body.theme-dark th,
+body.theme-dark td {
+  border-right: 1px solid #1f2937 !important;
+  border-bottom: 1px solid #1f2937 !important;
+}
+
+body.theme-dark tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+body.theme-dark th:last-child,
+body.theme-dark td:last-child {
+  border-right: none !important;
+}
+
+/* =========================================================
    BASE SHEET
    ========================================================= */
 
@@ -136,6 +237,23 @@ body.panel-open #main-layout {
   overflow: visible;
 }
 
+.page-footer__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 2mm;
+  cursor: pointer;
+}
+
+.page-footer__title::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid currentColor;
+  display: inline-block;
+}
+
 body.theme-dark .page-header,
 body.theme-dark .page-footer {
   color: var(--text-color);
@@ -157,7 +275,14 @@ body.theme-dark .page-footer::before {
 }
 
 .sheet::after {
-  content: counter(page);
+  content: none;
+}
+
+.theme-dark .sheet::after {
+  content: none;
+}
+
+.page-number-link {
   position: absolute;
   right: 15mm;
   bottom: 10mm;
@@ -165,10 +290,14 @@ body.theme-dark .page-footer::before {
   font-size: 12px;
   color: #555;
   z-index: 2;
-  pointer-events: none;
+  text-decoration: none;
 }
 
-.theme-dark .sheet::after {
+.page-number-link:hover {
+  text-decoration: underline;
+}
+
+.theme-dark .page-number-link {
   color: #e5e7eb;
   text-shadow: 0 0 4px rgba(0,0,0,0.35);
 }
@@ -176,63 +305,61 @@ body.theme-dark .page-footer::before {
 .sheet-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3mm;
   margin-left: 6mm;
 }
 
 .sheet-nav__btn {
   display: inline-block;
-  padding: 2px 6px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  color: #0f172a;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
   font-size: 11px;
+  font-weight: 700;
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.2s ease;
 }
 
 .sheet-nav__btn:hover {
-  background: #e2e8f0;
-  border-color: #94a3b8;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  text-decoration: underline;
 }
 
 .theme-dark .sheet-nav__btn {
-  background: #1e293b;
-  border-color: #334155;
-  color: #e5e7eb;
+  background: transparent;
+  border-color: transparent;
+  color: inherit;
 }
 
 .theme-dark .sheet-nav__btn:hover {
-  background: #0ea5e9;
-  color: #0b1220;
-  border-color: #0ea5e9;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  background: transparent;
+  color: inherit;
 }
 
 .sheet-nav__btn--self {
   font-weight: 700;
-  background: #fef3c7;
-  border-color: #f59e0b;
+  background: transparent;
+  border-color: transparent;
 }
 
 .sheet-nav__btn--self:hover {
-  background: #fde68a;
-  border-color: #d97706;
+  background: transparent;
+  border-color: transparent;
 }
 
 .theme-dark .sheet-nav__btn--self {
-  background: #1f2937;
-  color: #e5e7eb;
-  border-color: #334155;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  background: transparent;
+  color: inherit;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .theme-dark .sheet-nav__btn--self:hover {
-  background: #0ea5e9;
-  border-color: #06b6d4;
-  color: #0b1220;
+  background: transparent;
+  border-color: transparent;
+  color: inherit;
 }
 
 .Titlepage.sheet::after {
@@ -1487,10 +1614,6 @@ h1 {
     display: none !important;
   }
 
-  .sheet-audio__button {
-    display: none !important;
-  }
-
   .page-footer,
   .sub-page-sheet .page-footer {
     border-top: 0.2mm solid #ccc !important;
@@ -1542,6 +1665,45 @@ h1 {
   opacity: 0.9;
   transition: height 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
   z-index: 5;
+  touch-action: none;
+}
+
+.sheet-audio__scrubber {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+  z-index: 6;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.sheet-audio__scrubber:focus-visible {
+  outline: 1px dashed #0ea5e9;
+  outline-offset: 2px;
+}
+
+.sheet-audio__scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: none;
+}
+
+.sheet-audio__scrubber::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: none;
 }
 
 .page-footer.has-audio:hover .sheet-audio__progress {
@@ -1558,38 +1720,7 @@ body.theme-dark .sheet-audio__progress {
   );
 }
 
-.sheet-audio__button {
-  width: 18px;
-  height: 18px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #ffffff 0%, #f1f1f1 100%);
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,.2);
-}
-
-.sheet-audio__icon {
-  display: block;
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 8px solid #333;
-}
-
-.sheet-audio__button.is-playing .sheet-audio__icon {
-  width: 8px;
-  height: 8px;
-  border: none;
-  background:
-    linear-gradient(90deg, #333 0 40%, transparent 40% 60%, #333 60% 100%),
-    linear-gradient(#333, #333);
-  border-radius: 1px;
-}
+/* audio button removed in favor of footer triangle */
 .sheet-audio__hidden {
   display: none;
 }

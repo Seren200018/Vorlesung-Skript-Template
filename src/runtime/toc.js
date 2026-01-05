@@ -112,7 +112,7 @@ export function buildTocAndPageChrome(ctx) {
       sheet.appendChild(footer);
     }
     footer.innerHTML = `<span class="page-footer__title">${lectureTitle}</span>`;
-    footer.appendChild(buildSelfLink(slug));
+    sheet.appendChild(buildSelfLink(slug, page));
 
     // Apply header/footer to sub-pages
     sheet.querySelectorAll(".sub-page-sheet").forEach((sub, idx) => {
@@ -131,7 +131,7 @@ export function buildTocAndPageChrome(ctx) {
         sub.appendChild(subFooter);
       }
       subFooter.innerHTML = `<span class="page-footer__title">${lectureTitle}</span>`;
-      subFooter.appendChild(buildSelfLink(slug));
+      sub.appendChild(buildSelfLink(slug, page));
     });
   });
 }
@@ -163,20 +163,17 @@ function ensureSheetSlug(sheet) {
   return slug;
 }
 
-function buildSelfLink(slug) {
-  const wrap = document.createElement("div");
-  wrap.className = "sheet-nav";
+function buildSelfLink(slug, pageNumber) {
   const a = document.createElement("a");
-  a.className = "sheet-nav__btn sheet-nav__btn--self";
+  a.className = "page-number-link";
   a.href = `#${slug}`;
-  a.textContent = slug;
-  a.title = `Link zu dieser Seite (#${slug})`;
+  a.textContent = pageNumber ? `${pageNumber}` : slug;
+  a.title = `Link zu Seite ${pageNumber || slug} kopieren`;
   a.addEventListener("click", (e) => {
     e.preventDefault();
     const url = new URL(window.location.href);
     url.hash = slug;
     navigator.clipboard?.writeText(url.toString()).catch(() => {});
   });
-  wrap.appendChild(a);
-  return wrap;
+  return a;
 }

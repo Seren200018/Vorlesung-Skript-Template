@@ -59,13 +59,6 @@ export function createAudioFeature(ctx) {
       const wrap = document.createElement("div");
       wrap.className = "sheet-audio sheet-audio--footer";
 
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "sheet-audio__button";
-      const icon = document.createElement("span");
-      icon.className = "sheet-audio__icon";
-      button.appendChild(icon);
-
       const audio = document.createElement("audio");
       audio.preload = "metadata";
       audio.src = entry.src;
@@ -80,16 +73,37 @@ export function createAudioFeature(ctx) {
       progressBar.className = "sheet-audio__progress";
       targetFooter.prepend(progressBar);
 
+      const scrubber = document.createElement("input");
+      scrubber.type = "range";
+      scrubber.className = "sheet-audio__scrubber";
+      scrubber.min = "0";
+      scrubber.max = "100";
+      scrubber.step = "0.1";
+      scrubber.value = "0";
+      targetFooter.prepend(scrubber);
+
+      let isScrubbing = false;
+
       const syncProgress = () => {
         if (!audio.duration || Number.isNaN(audio.duration)) return;
         const pct = Math.min(100, Math.max(0, (audio.currentTime / audio.duration) * 100));
         targetFooter.style.setProperty("--audio-progress", `${pct}%`);
+        if (!isScrubbing) {
+          scrubber.value = `${pct}`;
+        }
+      };
+
+      const togglePlayback = () => {
+        if (audio.paused) {
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
       };
 
       audio.addEventListener("timeupdate", syncProgress);
       audio.addEventListener("loadedmetadata", syncProgress);
       audio.addEventListener("ended", () => {
-        button.classList.remove("is-playing");
         targetFooter.style.setProperty("--audio-progress", "0%");
       });
 
@@ -99,31 +113,70 @@ export function createAudioFeature(ctx) {
         });
       });
 
-      progressBar.addEventListener("click", (e) => {
+      const pctFromClientX = (clientX) => {
         const rect = progressBar.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const pct = Math.min(1, Math.max(0, x / rect.width));
-        if (audio.duration && !Number.isNaN(audio.duration)) {
-          audio.currentTime = pct * audio.duration;
+        if (!rect.width) return 0;
+        return (clientX - rect.left) / rect.width;
+      };
+
+      const moveScrub = (pct) => {
+        if (!audio.duration || Number.isNaN(audio.duration)) return;
+        const clamped = Math.min(1, Math.max(0, pct));
+        audio.currentTime = clamped * audio.duration;
+        targetFooter.style.setProperty("--audio-progress", `${clamped * 100}%`);
+        scrubber.value = `${clamped * 100}`;
+      };
+
+      scrubber.addEventListener("pointerdown", (e) => {
+        if (!audio.duration || Number.isNaN(audio.duration)) return;
+        isScrubbing = true;
+        if (e.pointerId !== undefined) {
+          scrubber.setPointerCapture(e.pointerId);
         }
-        targetFooter.style.setProperty("--audio-progress", `${pct * 100}%`);
+        moveScrub(pctFromClientX(e.clientX));
       });
 
-      button.addEventListener("click", () => {
-        if (audio.paused) {
-          audio.play().catch(() => {});
-          button.classList.add("is-playing");
-        } else {
-          audio.pause();
-          button.classList.remove("is-playing");
-        }
+      scrubber.addEventListener("pointermove", (e) => {
+        if (!isScrubbing) return;
+        moveScrub(pctFromClientX(e.clientX));
       });
 
-      wrap.append(button, audio);
+      const endScrub = (e) => {
+        if (!isScrubbing) return;
+        isScrubbing = false;
+        if (e.pointerId !== undefined && scrubber.hasPointerCapture(e.pointerId)) {
+          scrubber.releasePointerCapture(e.pointerId);
+        }
+      };
+
+      scrubber.addEventListener("pointerup", endScrub);
+      scrubber.addEventListener("pointercancel", endScrub);
+
+      scrubber.addEventListener("input", (e) => {
+        if (!audio.duration || Number.isNaN(audio.duration)) return;
+        const pct = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)) / 100;
+        moveScrub(pct);
+      });
+
+      progressBar.addEventListener("click", (e) => {
+        if (isSeeking) return;
+        seekFromPointer(e.clientX);
+      });
+
+      wrap.append(audio);
       targetFooter.appendChild(wrap);
 
       const container = targetFooter.closest(".sub-page-sheet") || targetFooter.closest(".sheet");
       audioRegistry.push({ audio, container });
+
+      // Allow clicking the footer title triangle to toggle audio for this sheet.
+      const footerTitle = targetFooter.querySelector(".page-footer__title");
+      if (footerTitle && !footerTitle.dataset.audioToggleBound) {
+        footerTitle.dataset.audioToggleBound = "true";
+        footerTitle.addEventListener("click", () => {
+          togglePlayback();
+        });
+      }
     };
 
     sheetAudio.forEach((entry) => {
