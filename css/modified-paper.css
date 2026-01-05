@@ -254,6 +254,16 @@ body.theme-dark td:last-child {
   display: inline-block;
 }
 
+.page-footer__title.is-playing::before {
+  width: 8px;
+  height: 10px;
+  border: none;
+  background:
+    linear-gradient(90deg, currentColor 0 40%, transparent 40% 60%, currentColor 60% 100%),
+    linear-gradient(currentColor, currentColor);
+  border-radius: 1px;
+}
+
 body.theme-dark .page-header,
 body.theme-dark .page-footer {
   color: var(--text-color);

@@ -84,12 +84,23 @@ export function createAudioFeature(ctx) {
 
       let isScrubbing = false;
 
+      const footerTitle = targetFooter.querySelector(".page-footer__title");
+
       const syncProgress = () => {
         if (!audio.duration || Number.isNaN(audio.duration)) return;
         const pct = Math.min(100, Math.max(0, (audio.currentTime / audio.duration) * 100));
         targetFooter.style.setProperty("--audio-progress", `${pct}%`);
         if (!isScrubbing) {
           scrubber.value = `${pct}`;
+        }
+      };
+
+      const updateFooterIndicator = () => {
+        if (!footerTitle) return;
+        if (audio.paused) {
+          footerTitle.classList.remove("is-playing");
+        } else {
+          footerTitle.classList.add("is-playing");
         }
       };
 
@@ -105,13 +116,17 @@ export function createAudioFeature(ctx) {
       audio.addEventListener("loadedmetadata", syncProgress);
       audio.addEventListener("ended", () => {
         targetFooter.style.setProperty("--audio-progress", "0%");
+        updateFooterIndicator();
       });
 
       audio.addEventListener("play", () => {
         audioRegistry.forEach(({ audio: other }) => {
           if (other !== audio) other.pause();
         });
+        updateFooterIndicator();
       });
+
+      audio.addEventListener("pause", updateFooterIndicator);
 
       const pctFromClientX = (clientX) => {
         const rect = progressBar.getBoundingClientRect();
@@ -158,11 +173,6 @@ export function createAudioFeature(ctx) {
         moveScrub(pct);
       });
 
-      progressBar.addEventListener("click", (e) => {
-        if (isSeeking) return;
-        seekFromPointer(e.clientX);
-      });
-
       wrap.append(audio);
       targetFooter.appendChild(wrap);
 
@@ -170,13 +180,14 @@ export function createAudioFeature(ctx) {
       audioRegistry.push({ audio, container });
 
       // Allow clicking the footer title triangle to toggle audio for this sheet.
-      const footerTitle = targetFooter.querySelector(".page-footer__title");
       if (footerTitle && !footerTitle.dataset.audioToggleBound) {
         footerTitle.dataset.audioToggleBound = "true";
         footerTitle.addEventListener("click", () => {
           togglePlayback();
         });
       }
+
+      updateFooterIndicator();
     };
 
     sheetAudio.forEach((entry) => {
