@@ -1,19 +1,32 @@
 {
-  "name": "avc_01_v1",
-  "private": true,
-  "version": "0.0.0",
+  "name": "avc-script-template",
+  "private": false,
+  "version": "0.1.0",
   "type": "module",
+  "main": "./dist/avc-script-template.umd.js",
+  "module": "./dist/avc-script-template.js",
+  "exports": {
+    ".": {
+      "import": "./dist/avc-script-template.js",
+      "require": "./dist/avc-script-template.umd.js",
+      "default": "./dist/avc-script-template.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "build:offline": "node tools/offline-pack.js"
-  },
-  "devDependencies": {
-    "vite": "^6.4.1",
-    "jszip": "^3.10.1"
+    "build:offline": "node tools/offline-pack.js",
+    "prepare": "npm run build"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "animejs": "^3.2.2",
     "jsxgraph": "^1.10.1",
     "mathjs": "^14.3.0",
@@ -25,5 +38,8 @@
     "react-router-dom": "^7.4.0",
     "roughjs": "^4.6.6",
     "vivus": "^0.4.6"
+  },
+  "devDependencies": {
+    "vite": "^6.4.1"
   }
 }

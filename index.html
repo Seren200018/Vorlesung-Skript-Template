@@ -29,40 +29,7 @@
   <!-- Global settings and template runtime -->
   <script src="src/settings.js"></script> <!-- default metadata/audio/theme config -->
   <script src="src/symbol-settings.js"></script> <!-- optional custom symbol legends -->
-  <script src="src/template.js"></script> <!-- builds TOC, audio, print/export logic -->
-  <script type="module">
-    // Demo sketches; safe to remove if not needed
-    import { renderRoughTemplate, renderMassSpringDamper } from "./src/rough-template.js";
-    import { initJsxGraphDemo } from "./src/jsx-graph-demo.js";
-    window.addEventListener("DOMContentLoaded", () => {
-      const target = document.getElementById("sketch-template-demo");
-      if (target) {
-        renderRoughTemplate(target, {
-          width: 450,
-          height: 300,
-          title: "Rough.js Skizze",
-          subtitle: "Anpassbare Vorlage",
-        });
-      }
-
-      const msd = document.getElementById("msd-sketch");
-      if (msd) {
-        renderMassSpringDamper(msd, {
-          width: 450,
-          height: 180,
-          massLabel: "m",
-          springLabel: "k",
-          damperLabel: "c",
-          forceLabel: "F(t)",
-        });
-      }
-
-      const jsxDemo = document.getElementById("jsx-graph-demo");
-      if (jsxDemo) {
-        initJsxGraphDemo("jsx-graph-demo");
-      }
-    });
-  </script>
+  <script type="module" src="/src/main.js"></script> <!-- builds TOC, audio, print/export logic -->
 
 </head>
 
