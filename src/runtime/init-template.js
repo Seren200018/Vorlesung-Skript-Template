@@ -47,12 +47,14 @@ export function initTemplate(options = {}) {
   runSafe("initNoteExport", () => notes.initNoteExport());
   runSafe("initNoteImport", () => notes.initNoteImport());
   runSafe("initHighlightContextMenu", () => notes.initHighlightContextMenu());
+  // Math tooltips disabled per request
 
   window.addEventListener("load", () => {
     runSafe("initVideos (load)", () => videos.initVideos());
     runSafe("buildVideoList (load)", () => videos.buildVideoList());
     runSafe("buildLiteratureIndex (load)", () => buildLiteratureIndex());
     runSafe("renderSheetAudio (load)", () => audio.renderSheetAudio());
+    // Math tooltips disabled per request
   });
 
   return {

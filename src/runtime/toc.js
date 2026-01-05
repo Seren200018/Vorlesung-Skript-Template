@@ -95,6 +95,7 @@ export function buildTocAndPageChrome(ctx) {
     const page = Number(sheet.dataset.pageNumber);
     const chapter = findChapterForPage(page);
     if (!chapter) return;
+    const slug = ensureSheetSlug(sheet);
 
     let header = sheet.querySelector(".page-header");
     if (!header) {
@@ -111,6 +112,7 @@ export function buildTocAndPageChrome(ctx) {
       sheet.appendChild(footer);
     }
     footer.innerHTML = `<span class="page-footer__title">${lectureTitle}</span>`;
+    footer.appendChild(buildSelfLink(slug));
 
     // Apply header/footer to sub-pages
     sheet.querySelectorAll(".sub-page-sheet").forEach((sub, idx) => {
@@ -129,6 +131,52 @@ export function buildTocAndPageChrome(ctx) {
         sub.appendChild(subFooter);
       }
       subFooter.innerHTML = `<span class="page-footer__title">${lectureTitle}</span>`;
+      subFooter.appendChild(buildSelfLink(slug));
     });
   });
+}
+
+function slugify(raw) {
+  return (raw || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/['"()]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function ensureSheetSlug(sheet) {
+  if (sheet.dataset.linkSlug) return sheet.dataset.linkSlug;
+  const explicit = sheet.dataset.link || "";
+  const tocTitle = sheet.querySelector("[data-toc]")?.dataset?.toc || "";
+  let slug = slugify(explicit) || slugify(tocTitle) || slugify(sheet.id) || `sheet-${sheet.dataset.pageNumber || ""}`;
+  if (!slug) slug = `sheet-${Date.now()}`;
+  sheet.dataset.linkSlug = slug;
+  if (!document.getElementById(slug)) {
+    const anchor = document.createElement("a");
+    anchor.id = slug;
+    anchor.className = "sheet-link-anchor";
+    anchor.setAttribute("aria-hidden", "true");
+    sheet.prepend(anchor);
+  }
+  return slug;
+}
+
+function buildSelfLink(slug) {
+  const wrap = document.createElement("div");
+  wrap.className = "sheet-nav";
+  const a = document.createElement("a");
+  a.className = "sheet-nav__btn sheet-nav__btn--self";
+  a.href = `#${slug}`;
+  a.textContent = slug;
+  a.title = `Link zu dieser Seite (#${slug})`;
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    const url = new URL(window.location.href);
+    url.hash = slug;
+    navigator.clipboard?.writeText(url.toString()).catch(() => {});
+  });
+  wrap.appendChild(a);
+  return wrap;
 }

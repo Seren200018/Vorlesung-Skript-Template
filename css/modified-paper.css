@@ -168,6 +168,73 @@ body.theme-dark .page-footer::before {
   pointer-events: none;
 }
 
+.theme-dark .sheet::after {
+  color: #e5e7eb;
+  text-shadow: 0 0 4px rgba(0,0,0,0.35);
+}
+
+.sheet-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 6mm;
+}
+
+.sheet-nav__btn {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 11px;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sheet-nav__btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.theme-dark .sheet-nav__btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e5e7eb;
+}
+
+.theme-dark .sheet-nav__btn:hover {
+  background: #0ea5e9;
+  color: #0b1220;
+  border-color: #0ea5e9;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+
+.sheet-nav__btn--self {
+  font-weight: 700;
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.sheet-nav__btn--self:hover {
+  background: #fde68a;
+  border-color: #d97706;
+}
+
+.theme-dark .sheet-nav__btn--self {
+  background: #1f2937;
+  color: #e5e7eb;
+  border-color: #334155;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.theme-dark .sheet-nav__btn--self:hover {
+  background: #0ea5e9;
+  border-color: #06b6d4;
+  color: #0b1220;
+}
+
 .Titlepage.sheet::after {
   display: none;
 }
@@ -387,6 +454,11 @@ body.theme-dark .jxgbox .JXGinfobox {
   pointer-events: none;
 }
 
+.theme-dark .sub-page-sheet::after {
+  color: #e5e7eb;
+  text-shadow: 0 0 4px rgba(0,0,0,0.35);
+}
+
 .sub-page-sheet .page-header,
 .sub-page-sheet .page-footer {
   position: absolute;
@@ -397,6 +469,11 @@ body.theme-dark .jxgbox .JXGinfobox {
   font-weight: 700;
   color: #444;
   z-index: 2;
+}
+
+.theme-dark .sub-page-sheet .page-header,
+.theme-dark .sub-page-sheet .page-footer {
+  color: #e5e7eb;
 }
 
 .sub-page-sheet .page-header {
@@ -477,6 +554,10 @@ body.panel-open #subsheet-panel {
   cursor: pointer;
 }
 
+body.theme-dark #subsheet-close {
+  color: #e5e7eb;
+}
+
 /* Sub-Sheets im Panel */
 #subsheet-content .sub-page-sheet {
   margin-bottom: 20mm;
@@ -519,6 +600,12 @@ body.panel-open #subsheet-panel {
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: #444;
+}
+
+.theme-dark .toc-number,
+.theme-dark .toc-page {
+  color: #e5e7eb;
+  text-shadow: 0 0 3px rgba(0,0,0,0.35);
 }
 
 /* Inline titles updated from TOC */
