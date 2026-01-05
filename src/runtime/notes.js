@@ -46,15 +46,6 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
       const sheetId = sheet.id || `sheet-${idx + 1}`;
       const storedNote = notesState.notes[sheetId] || "";
 
-      let toggle = sheet.querySelector(".note-toggle");
-      if (!toggle) {
-        toggle = document.createElement("button");
-        toggle.type = "button";
-        toggle.className = "note-toggle";
-        toggle.textContent = "Notiz öffnen";
-        sheet.appendChild(toggle);
-      }
-
       let notesPane = sheet.querySelector(".sheet-notes");
       if (!notesPane) {
         notesPane = document.createElement("div");
@@ -79,13 +70,10 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
         });
       }
 
-      toggle.addEventListener("click", () => {
-        const open = sheet.classList.toggle("notes-open");
-        toggle.textContent = open ? "Notiz schließen" : "Notiz öffnen";
-      });
-
       applyStoredHighlights(sheet, sheetId);
     });
+
+    bindGlobalToggle();
   }
 
   function clearHighlights(sheet, sheetId) {
@@ -639,4 +627,22 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
     initNoteImport,
     initHighlightContextMenu,
   };
+
+  function bindGlobalToggle() {
+    const btn = document.getElementById("notes-toggle-all");
+    if (!btn) return;
+    let allOpen = false;
+    const updateText = () => {
+      btn.textContent = allOpen ? "Alle Notizen schließen" : "Alle Notizen öffnen";
+    };
+    updateText();
+    btn.addEventListener("click", () => {
+      allOpen = !allOpen;
+      sheets.forEach((sheet, idx) => {
+        if (sheet.classList.contains("Titlepage")) return;
+        sheet.classList.toggle("notes-open", allOpen);
+      });
+      updateText();
+    });
+  }
 }

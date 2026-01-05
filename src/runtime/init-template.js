@@ -33,7 +33,10 @@ export function initTemplate(options = {}) {
   runSafe("buildSymbolColumns", () => buildSymbolColumns(ctx, math.typeset));
   runSafe("buildAssetLists", () => buildAssetLists(ctx));
   runSafe("populateBuildInfo", () => populateBuildInfo(ctx));
-  runSafe("initAudioControls", () => audio.initAudioControls());
+  runSafe("initAudioControls", () => {
+    audio.initAudioControls();
+    audio.bindVolumeControl();
+  });
   runSafe("initVideos", () => videos.initVideos());
   runSafe("buildVideoList", () => videos.buildVideoList());
   runSafe("buildLiteratureIndex", () => buildLiteratureIndex());

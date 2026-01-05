@@ -14,7 +14,12 @@ export function initPrintDialog(ctx, { ensureJSZip }) {
   let printClones = [];
 
   const includeSubsheetsSelected = () => {
+    if (includeYes && !includeNo) {
+      // Checkbox style control
+      return includeYes.checked || includeYes.hasAttribute("checked");
+    }
     if (includeYes && includeNo) {
+      // Radio style legacy control
       return includeYes.checked || (!includeYes.checked && !includeNo.checked && includeYes.hasAttribute("checked"));
     }
     if (includeLegacy) return includeLegacy.checked;

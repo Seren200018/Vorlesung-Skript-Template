@@ -30,6 +30,61 @@
   <script src="src/settings.js"></script> <!-- default metadata/audio/theme config -->
   <script src="src/symbol-settings.js"></script> <!-- optional custom symbol legends -->
   <script type="module" src="/src/main.js"></script> <!-- builds TOC, audio, print/export logic -->
+  <style>
+    .settings-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      padding: 10px 16px;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-bottom: 2px solid #1e293b;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    .settings-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .settings-group label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .settings-bar button {
+      background: #14b8a6;
+      border: none;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .settings-bar button.secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+    }
+    .settings-divider {
+      width: 1px;
+      height: 26px;
+      background: #334155;
+    }
+    .settings-bar input[type="range"] {
+      accent-color: #14b8a6;
+    }
+    @media print {
+      .settings-bar {
+        display: none !important;
+      }
+    }
+  </style>
 
 </head>
 
@@ -41,6 +96,40 @@
       data-git-last-mod="2026-01-02T23:36:56+01:00"
       data-author="Autor / Dozent"
       data-license="CC BY-NC 4.0">
+<div class="settings-bar">
+  <div class="settings-group">
+    <button id="print-confirm" class="print-trigger">Drucken</button>
+    <button id="print-save" class="secondary print-trigger">Offline speichern</button>
+    <label><input type="checkbox" id="print-include-subsheets-yes" checked>Sub-Sheets mitdrucken</label>
+    <label><input type="checkbox" id="print-include-fullcode-main">Vollständige Codes mitdrucken</label>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group" aria-label="Audio-Modus">
+    <strong>Audio:</strong>
+    <label><input type="radio" name="audio-mode" value="off">Aus</label>
+    <label><input type="radio" name="audio-mode" value="manual" checked>Manuell</label>
+    <label><input type="radio" name="audio-mode" value="autoplay">Autoplay</label>
+    <label style="gap:6px;">
+      <span style="font-size:12px; opacity:0.9;">Lautstärke</span>
+      <input type="range" id="audio-volume" min="0" max="1" step="0.05" value="1">
+    </label>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group" aria-label="Theme">
+    <strong>Theme:</strong>
+    <label><input type="radio" name="theme-mode" value="light" checked>Hell</label>
+    <label><input type="radio" name="theme-mode" value="dark">Dunkel</label>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group">
+    <button id="notes-toggle-all" class="secondary" type="button">Notizen anzeigen/ausblenden</button>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group">
+    <button id="notes-export" class="secondary" type="button">Notizen exportieren</button>
+    <button id="notes-import" class="secondary" type="button">Notizen importieren</button>
+  </div>
+</div>
 <!-- Right-side panel that opens cloned subsheets -->
 <div id="subsheet-panel">
   <button id="subsheet-close">✕</button>
@@ -102,56 +191,6 @@
           <dd data-build-target="copyright">–</dd>
         </div>
       </dl>
-    </div>
-    <div class="qr-controls">
-      <h2>Dokument-Einstellungen</h2>
-      <div class="qr-controls__group">
-        <div class="qr-controls__label">Druck</div>
-        <label class="qr-radio">
-          <input type="radio" name="print-include-subsheets" id="print-include-subsheets-yes" value="yes" checked>
-          Sub-Sheets mitdrucken
-        </label>
-        <label class="qr-radio">
-          <input type="radio" name="print-include-subsheets" id="print-include-subsheets-no" value="no">
-          Nur Hauptseiten
-        </label>
-        <label class="qr-radio">
-          <input type="checkbox" id="print-include-fullcode-main">
-          Vollständige Codes nach den Sheets mitdrucken
-        </label>
-      </div>
-      <div class="qr-controls__actions">
-        <button id="print-confirm" class="print-trigger">Drucken</button>
-        <button id="print-save" class="print-trigger">Offline speichern</button>
-        <button id="notes-export" class="print-trigger" type="button">Notizen exportieren</button>
-        <button id="notes-import" class="print-trigger" type="button">Notizen importieren</button>
-      </div>
-      <div class="qr-controls__group">
-        <div class="qr-controls__label">Audio</div>
-        <label class="qr-radio">
-          <input type="radio" name="audio-mode" value="off">
-          Deaktiviert
-        </label>
-        <label class="qr-radio">
-          <input type="radio" name="audio-mode" value="manual" checked>
-          Manuell
-        </label>
-        <label class="qr-radio">
-          <input type="radio" name="audio-mode" value="autoplay">
-          Autoplay (Browser kann blockieren)
-        </label>
-      </div>
-      <div class="qr-controls__group">
-        <div class="qr-controls__label">Darstellung</div>
-        <label class="qr-radio">
-          <input type="radio" name="theme-mode" value="light" checked>
-          Hell
-        </label>
-        <label class="qr-radio">
-          <input type="radio" name="theme-mode" value="dark">
-          Dunkel
-        </label>
-      </div>
     </div>
   </div>
 </section>

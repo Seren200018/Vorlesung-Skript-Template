@@ -1,6 +1,7 @@
 export function createAudioFeature(ctx) {
   const { sheetAudio, audioRegistry, body, sheets, audioDefaults } = ctx;
   let audioMode = (body.dataset.audioMode || audioDefaults.mode || "manual").toLowerCase();
+  let audioVolume = clampVolume(parseFloat(localStorage.getItem("sheetAudioVolume")) || 1);
 
   const requestAudioUpdate = (() => {
     let pending = null;
@@ -70,6 +71,7 @@ export function createAudioFeature(ctx) {
       audio.src = entry.src;
       audio.setAttribute("title", entry.title);
       audio.className = "sheet-audio__hidden";
+      audio.volume = audioVolume;
       if (audioMode === "autoplay") {
         audio.autoplay = true;
       }
@@ -204,10 +206,30 @@ export function createAudioFeature(ctx) {
     }
   }
 
+  function clampVolume(v) {
+    if (!Number.isFinite(v)) return 1;
+    return Math.min(1, Math.max(0, v));
+  }
+
+  function bindVolumeControl() {
+    const slider = document.getElementById("audio-volume");
+    if (!slider) return;
+    slider.value = String(audioVolume);
+    slider.addEventListener("input", () => {
+      const next = clampVolume(parseFloat(slider.value));
+      audioVolume = next;
+      localStorage.setItem("sheetAudioVolume", String(next));
+      audioRegistry.forEach(({ audio }) => {
+        audio.volume = next;
+      });
+    });
+  }
+
   return {
     initAudioControls,
     renderSheetAudio,
     requestAudioUpdate,
     updateAutoplayFocus,
+    bindVolumeControl,
   };
 }
