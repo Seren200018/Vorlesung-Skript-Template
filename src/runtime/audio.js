@@ -15,6 +15,8 @@ export function createAudioFeature(ctx) {
   })();
 
   function initAudioControls() {
+    ensureExclusiveAudioPlayback();
+    ensureFooterTitleAudioToggle();
     sheetAudio.length = 0;
     sheets.forEach((sheet) => {
       const src = (sheet.dataset.audioSrc || "").trim();
@@ -47,12 +49,77 @@ export function createAudioFeature(ctx) {
     applyVolumeToRegistry();
   }
 
+  function ensureExclusiveAudioPlayback() {
+    if (body.dataset.audioExclusiveBound === "true") return;
+    body.dataset.audioExclusiveBound = "true";
+
+    const onStart = (e) => {
+      const started = e.target;
+      if (!started || started.tagName !== "AUDIO") return;
+      pauseAllOtherAudio(started);
+      requestAnimationFrame(() => pauseAllOtherAudio(started));
+    };
+
+    document.addEventListener("play", onStart, true);
+    document.addEventListener("playing", onStart, true);
+  }
+
+  function pauseAllOtherAudio(active) {
+    audioRegistry.forEach(({ audio }) => {
+      if (audio && audio !== active) audio.pause();
+    });
+    document.querySelectorAll("audio").forEach((other) => {
+      if (other === active) return;
+      try {
+        other.pause();
+      } catch (err) {
+        // ignore
+      }
+    });
+  }
+
+  function ensureFooterTitleAudioToggle() {
+    if (body.dataset.audioFooterToggleBound === "true") return;
+    body.dataset.audioFooterToggleBound = "true";
+
+    document.addEventListener(
+      "click",
+      (e) => {
+        const title = e.target?.closest?.(".page-footer__title");
+        if (!title) return;
+        const footer = title.closest(".page-footer");
+        if (!footer) return;
+        const audio = footer.querySelector("audio.sheet-audio__hidden");
+        if (!audio) return;
+
+        // Prevent any older per-footer listeners (that might reference stale/detached <audio> nodes)
+        // from firing.
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (audio.paused) {
+          pauseAllOtherAudio(audio);
+          audio.play().catch(() => {});
+        } else {
+          audio.pause();
+        }
+      },
+      true
+    );
+  }
+
   function renderSheetAudio() {
     // Remove previous injected audio blocks
     audioRegistry.forEach(({ audio }) => audio.pause());
     audioRegistry.length = 0;
     document.querySelectorAll(".sheet-audio").forEach((node) => node.remove());
     document.querySelectorAll(".sheet-audio__progress").forEach((node) => node.remove());
+    document.querySelectorAll(".sheet-audio__scrubber").forEach((node) => node.remove());
+    document.querySelectorAll(".page-footer.has-audio").forEach((footer) => {
+      footer.classList.remove("has-audio");
+      footer.style.setProperty("--audio-progress", "0%");
+      footer.querySelector(".page-footer__title")?.classList.remove("is-playing");
+    });
     if (audioMode === "off") return;
 
     const createControls = (targetFooter, entry) => {
@@ -66,9 +133,6 @@ export function createAudioFeature(ctx) {
       audio.setAttribute("title", entry.title);
       audio.className = "sheet-audio__hidden";
       applyVolumeToAudio(audio);
-      if (audioMode === "autoplay") {
-        audio.autoplay = true;
-      }
 
       const progressBar = document.createElement("div");
       progressBar.className = "sheet-audio__progress";
@@ -107,6 +171,7 @@ export function createAudioFeature(ctx) {
 
       const togglePlayback = () => {
         if (audio.paused) {
+          pauseAllOtherAudio(audio);
           audio.play().catch(() => {});
         } else {
           audio.pause();
@@ -122,9 +187,7 @@ export function createAudioFeature(ctx) {
       });
 
       audio.addEventListener("play", () => {
-        audioRegistry.forEach(({ audio: other }) => {
-          if (other !== audio) other.pause();
-        });
+        pauseAllOtherAudio(audio);
         updateFooterIndicator();
       });
 
@@ -182,14 +245,6 @@ export function createAudioFeature(ctx) {
       const container = targetFooter.closest(".sub-page-sheet") || targetFooter.closest(".sheet");
       audioRegistry.push({ audio, container });
 
-      // Allow clicking the footer title triangle to toggle audio for this sheet.
-      if (footerTitle && !footerTitle.dataset.audioToggleBound) {
-        footerTitle.dataset.audioToggleBound = "true";
-        footerTitle.addEventListener("click", () => {
-          togglePlayback();
-        });
-      }
-
       updateFooterIndicator();
     };
 
@@ -203,7 +258,11 @@ export function createAudioFeature(ctx) {
     });
 
     applyVolumeToRegistry();
-    requestAudioUpdate();
+    if (audioMode === "autoplay") {
+      updateAutoplayFocus();
+    } else {
+      requestAudioUpdate();
+    }
   }
 
   function pickAudioCandidates(preferPanel) {
@@ -266,9 +325,7 @@ export function createAudioFeature(ctx) {
   function updateAutoplayFocus() {
     if (audioMode !== "autoplay") return;
     const active = chooseActiveAudio();
-    audioRegistry.forEach(({ audio }) => {
-      if (audio !== active) audio.pause();
-    });
+    if (active) pauseAllOtherAudio(active);
     if (audioMode === "autoplay" && active) {
       active.play().catch(() => {});
     }
@@ -303,35 +360,15 @@ export function createAudioFeature(ctx) {
   };
 
   function applyVolumeToRegistry() {
-    audioRegistry.forEach(({ audio }) => {
-      applyVolumeToAudio(audio, { restartIfPlaying: true });
-    });
-    document.querySelectorAll(".sheet-audio__hidden").forEach((audioEl) => {
-      try {
-        applyVolumeToAudio(audioEl, { restartIfPlaying: true });
-      } catch (err) {
-        // ignore
-      }
-    });
+    audioRegistry.forEach(({ audio }) => applyVolumeToAudio(audio));
   }
 
-  function applyVolumeToAudio(audio, opts = {}) {
+  function applyVolumeToAudio(audio) {
     if (!audio) return;
-    const { restartIfPlaying = false } = opts;
     try {
       const vol = clampVolume(audioVolume);
       audio.muted = vol === 0;
-      audio.defaultMuted = vol === 0;
-      const wasPlaying = restartIfPlaying && !audio.paused && !audio.ended;
-      const pos = audio.currentTime || 0;
       audio.volume = vol;
-      audio.dispatchEvent(new Event("volumechange"));
-      if (wasPlaying) {
-        audio.pause();
-        audio.currentTime = pos;
-        audio.play().catch(() => {});
-      }
-      audio.dataset.volumeApplied = String(audioVolume);
     } catch (err) {
       // ignore
     }
