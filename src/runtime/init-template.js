@@ -13,6 +13,7 @@ import { initThemeSwitch } from "./theme.js";
 import { initPrintDialog } from "./print.js";
 import { populateBuildInfo } from "./build-info.js";
 import { buildLiteratureIndex } from "./literature.js";
+import { initZoomControls } from "./zoom.js";
 
 export function initTemplate(options = {}) {
   const ctx = createTemplateContext(options);
@@ -42,6 +43,7 @@ export function initTemplate(options = {}) {
   runSafe("buildLiteratureIndex", () => buildLiteratureIndex());
   runSafe("initPythonDemos", initPythonDemos);
   runSafe("initThemeSwitch", () => initThemeSwitch(ctx));
+  runSafe("initZoomControls", () => initZoomControls());
   runSafe("initPrintDialog", () => initPrintDialog(ctx, { ensureJSZip: zip.ensureJSZip }));
   runSafe("initSheetNotes", () => notes.initSheetNotes());
   runSafe("initNoteExport", () => notes.initNoteExport());

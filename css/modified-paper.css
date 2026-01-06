@@ -2,6 +2,8 @@
 :root {
   /* shared width for the slide-out subsheet panel */
   --panel-width: min(240mm, 90vw);
+  --sheet-scale: 1;
+  --main-layout-offset-x: 0px;
   --symbol-column-width: 38mm;
   --symbol-column-gap: 6mm;
   --bg-color: #f0f0f0;
@@ -66,11 +68,60 @@ body.theme-dark .sheet {
   transition: transform 0.35s ease;
   transition: transform 0.35s ease, background-color 0.4s ease, color 0.4s ease;
   background: var(--bg-color);
+  transform: translateX(var(--main-layout-offset-x)) scale(var(--sheet-scale));
+  transform-origin: top center;
 }
 
 /* wenn Panel offen ist */
 body.panel-open #main-layout {
-  transform: translateX(calc(-1 * var(--panel-width)));
+  --main-layout-offset-x: calc(-1 * var(--panel-width));
+}
+
+/* Panel content should follow sheet zoom */
+#subsheet-content {
+  transform: scale(var(--sheet-scale));
+  transform-origin: top left;
+}
+
+#subsheet-zoom {
+  width: 100%;
+}
+
+.zoom-controls {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.zoom-controls button {
+  width: 44px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  background: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.zoom-controls button:hover {
+  background: rgba(20, 184, 166, 0.9);
+  color: #0f172a;
+}
+
+.zoom-controls button:focus-visible {
+  outline: 2px solid #14b8a6;
+  outline-offset: 2px;
 }
 
 /* =========================================================
@@ -484,6 +535,10 @@ body.A5.landscape .sub-page-sheet { width: 210mm; height: 147mm }
     display: none !important;
   }
 
+  .zoom-controls {
+    display: none !important;
+  }
+
   #main-layout {
     transform: none !important;
     overflow: visible !important;
@@ -710,7 +765,7 @@ body.theme-dark .jxgbox .JXGinfobox {
   /* hidden by default */
   transform: translateX(100%);
   transition: transform 0.35s ease;
-  overflow-y: auto;
+  overflow: auto;
   padding: 14mm 10mm 10mm;
 }
 

@@ -133,7 +133,15 @@
 <!-- Right-side panel that opens cloned subsheets -->
 <div id="subsheet-panel">
   <button id="subsheet-close">✕</button>
-  <div id="subsheet-content"></div>
+  <div id="subsheet-zoom">
+    <div id="subsheet-content"></div>
+  </div>
+</div>
+
+<div id="zoom-controls" class="zoom-controls" aria-label="Zoom">
+  <button id="zoom-in" type="button" title="Zoom in">+</button>
+  <button id="zoom-reset" type="button" title="Reset zoom">100%</button>
+  <button id="zoom-out" type="button" title="Zoom out">−</button>
 </div>
 
 <!-- Main printable layout; each .sheet becomes a page -->
