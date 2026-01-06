@@ -1,6 +1,25 @@
 export function createVideoFeature(ctx) {
   const { videoEntries, sheets } = ctx;
 
+  let ytReady;
+
+  function ensureYouTubeAPI() {
+    if (window.YT && window.YT.Player) return Promise.resolve();
+    if (ytReady) return ytReady;
+    ytReady = new Promise((resolve) => {
+      const prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        resolve();
+      };
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      document.head.appendChild(script);
+    });
+    return ytReady;
+  }
+
   function initVideos() {
     const blocks = Array.from(document.querySelectorAll(".video-entry[data-video-id]"));
     if (!blocks.length) return;
@@ -23,7 +42,7 @@ export function createVideoFeature(ctx) {
         block.prepend(frame);
       }
       frame.innerHTML = "";
-      frame.appendChild(buildVideoIframe(url, title));
+      frame.appendChild(buildVideoPlaceholder({ url, title, shareUrl, iframeId: `yt-embed-${videoId}-${number}` }));
       frame.appendChild(buildVideoQr(shareUrl, title));
 
       // normalize figcaption
@@ -86,15 +105,21 @@ export function createVideoFeature(ctx) {
     });
   }
 
-  function buildVideoIframe(url, title) {
-    const iframeWrap = document.createElement("div");
-    iframeWrap.className = "video-embed";
+  function buildVideoIframe(url, title, iframeId) {
     const iframe = document.createElement("iframe");
-    iframe.src = url;
+    const sep = url.includes("?") ? "&" : "?";
+    iframe.src = `${url}${sep}enablejsapi=1&rel=0&playsinline=1`;
     iframe.title = title || "YouTube Video";
     iframe.loading = "lazy";
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    if (iframeId) iframe.id = iframeId;
+    return iframe;
+  }
+
+  function wrapIframe(iframe) {
+    const iframeWrap = document.createElement("div");
+    iframeWrap.className = "video-embed";
     iframeWrap.appendChild(iframe);
     return iframeWrap;
   }
@@ -126,4 +151,52 @@ export function createVideoFeature(ctx) {
     buildVideoIframe,
     buildVideoQr,
   };
+
+  function buildVideoPlaceholder({ url, title, shareUrl, iframeId }) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "video-placeholder";
+    const info = document.createElement("div");
+    info.className = "video-placeholder__info";
+    info.textContent = title || "Video";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "video-placeholder__btn";
+    btn.textContent = "Video anzeigen";
+    btn.addEventListener("click", () => {
+      const iframe = buildVideoIframe(url, title, iframeId);
+      placeholder.replaceWith(wrapIframe(iframe));
+      initStopAfterFirstRun(iframe);
+    });
+    placeholder.append(info, btn);
+    return placeholder;
+  }
+
+  function initStopAfterFirstRun(iframe) {
+    if (!iframe) return;
+    ensureYouTubeAPI()
+      .then(() => {
+        if (!window.YT?.Player) return;
+        // eslint-disable-next-line no-new
+        new window.YT.Player(iframe, {
+          host: "https://www.youtube-nocookie.com",
+          playerVars: {
+            rel: 0,
+            playsinline: 1,
+            modestbranding: 1,
+          },
+          events: {
+            onStateChange: (e) => {
+              if (e.data === window.YT.PlayerState.ENDED) {
+                try {
+                  e.target.stopVideo();
+                } catch (err) {
+                  // ignore stop errors
+                }
+              }
+            },
+          },
+        });
+      })
+      .catch(() => {});
+  }
 }

@@ -44,6 +44,7 @@ npm run build
 - Exports now include a `docId` plus per-sheet metadata (slug, title, hash). Imports remap notes to sheets by slug/title, so adding new sheets between existing ones won’t misalign notes.
 - If a sheet’s content hash changed since export, the imported note is prefixed with a warning to review it.
 - Importing still replaces existing notes/highlights. When current notes/highlights exist, a confirmation modal appears with three choices: export then import, import directly, or cancel. The modal works in both light and dark themes.
+- Global audio: a volume slider (`#audio-volume`) now updates all sheet audio elements immediately and persists the chosen level in `localStorage`.
 
 ## JSXGraph theme palette
 

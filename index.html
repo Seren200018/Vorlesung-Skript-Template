@@ -140,10 +140,10 @@
 <div id="main-layout">
 <!-- Each sheet element should have the class "sheet" -->
 <!-- "padding-**mm" is optional: you can set 10, 15, 20 or 25 -->
-<!-- Title page: background image plus hero metadata -->
+  <!-- Title page: background image plus hero metadata -->
 <section class="sheet Titlepage Background" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Intro Audio">
   <div class="title-bg">
-    <img src="img/generated_video.gif" alt="">
+    <video src="img/bg.mp4" muted playsinline autoplay preload="auto" poster="img/Titlebg.jpg"></video>
   </div>
   <div class="abstract">
     <p class="Titlepage Series">
@@ -185,6 +185,10 @@
         <div class="build-meta__row">
           <dt>Autor</dt>
           <dd data-build-target="author">–</dd>
+        </div>
+        <div class="build-meta__row">
+          <dt>Theme-Version</dt>
+          <dd data-build-target="version">–</dd>
         </div>
         <div class="build-meta__row">
           <dt>Copyright</dt>

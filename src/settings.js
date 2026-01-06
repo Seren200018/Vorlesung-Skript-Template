@@ -23,4 +23,5 @@ window.TemplateSettings = {
   repoUrl: "https://github.com/Seren200018/Vorlesung-Skript-Template",
   author: "Autor / Dozent",
   license: "CC BY-NC 4.0",
+  version: "0.1.0",
 };
