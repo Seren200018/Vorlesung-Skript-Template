@@ -153,6 +153,9 @@ export function createVideoFeature(ctx) {
   };
 
   function buildVideoPlaceholder({ url, title, shareUrl, iframeId }) {
+    const embed = document.createElement("div");
+    embed.className = "video-embed video-embed--placeholder";
+
     const placeholder = document.createElement("div");
     placeholder.className = "video-placeholder";
     const info = document.createElement("div");
@@ -161,14 +164,15 @@ export function createVideoFeature(ctx) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "video-placeholder__btn";
-    btn.textContent = "Video anzeigen";
+    btn.textContent = "Youtube Video Anzeigen";
     btn.addEventListener("click", () => {
       const iframe = buildVideoIframe(url, title, iframeId);
-      placeholder.replaceWith(wrapIframe(iframe));
+      embed.replaceWith(wrapIframe(iframe));
       initStopAfterFirstRun(iframe);
     });
     placeholder.append(info, btn);
-    return placeholder;
+    embed.appendChild(placeholder);
+    return embed;
   }
 
   function initStopAfterFirstRun(iframe) {

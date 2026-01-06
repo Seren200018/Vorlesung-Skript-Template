@@ -14,6 +14,7 @@ import { initPrintDialog } from "./print.js";
 import { populateBuildInfo } from "./build-info.js";
 import { buildLiteratureIndex } from "./literature.js";
 import { initZoomControls } from "./zoom.js";
+import { syncMetadataFromTitlePage } from "./title-metadata.js";
 
 export function initTemplate(options = {}) {
   const ctx = createTemplateContext(options);
@@ -27,6 +28,7 @@ export function initTemplate(options = {}) {
   window.addEventListener("resize", audio.requestAudioUpdate);
 
   runSafe("numberSubpages", () => numberSubpages(ctx));
+  runSafe("syncMetadataFromTitlePage", () => syncMetadataFromTitlePage(ctx));
   runSafe("initSubsheetPanel", () =>
     initSubsheetPanel({ typeset: math.typeset, requestAudioUpdate: audio.requestAudioUpdate })
   );
