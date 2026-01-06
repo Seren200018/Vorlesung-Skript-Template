@@ -8,6 +8,8 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
   let lastSelection = null;
   let lastSelectionRect = null;
   let suppressMenuCloseOnce = false;
+  notesState.docId = notesState.docId || generateDocId();
+  notesState.sheetMeta = Array.isArray(notesState.sheetMeta) ? notesState.sheetMeta : [];
 
   function loadNotesState(key) {
     try {
@@ -17,6 +19,8 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
       return {
         notes: parsed.notes || {},
         highlights: parsed.highlights || {},
+        docId: parsed.docId,
+        sheetMeta: parsed.sheetMeta || [],
       };
     } catch (err) {
       console.warn("Notes load failed", err);
@@ -26,6 +30,8 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
 
   function persistNotesState() {
     try {
+      if (!notesState.docId) notesState.docId = generateDocId();
+      if (!Array.isArray(notesState.sheetMeta)) notesState.sheetMeta = [];
       localStorage.setItem(notesStorageKey, JSON.stringify(notesState));
     } catch (err) {
       console.warn("Notes save failed", err);
@@ -39,6 +45,8 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
   function initSheetNotes() {
     notesState.notes = notesState.notes || {};
     notesState.highlights = notesState.highlights || {};
+    notesState.sheetMeta = captureSheetMeta();
+    persistNotesState();
 
     sheets.forEach((sheet, idx) => {
       if (sheet.classList.contains("Titlepage")) return;
@@ -503,6 +511,8 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
   }
 
   async function exportNotesBundle() {
+    notesState.docId = notesState.docId || generateDocId();
+    notesState.sheetMeta = captureSheetMeta();
     const data = JSON.stringify(notesState, null, 2);
     const html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 
@@ -535,33 +545,75 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
     if (!btn) return;
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".json,application/json";
+    input.accept = ".json,.zip,application/json,application/zip";
     input.style.display = "none";
     input.addEventListener("change", () => {
       const file = input.files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const parsed = JSON.parse(reader.result || "{}");
-          notesState = {
-            notes: parsed.notes || {},
-            highlights: parsed.highlights || {},
-          };
-          persistNotesState();
-          applyImportedNotes();
-        } catch (err) {
-          console.warn("Import failed", err);
-        }
-      };
-      reader.readAsText(file);
+      handleNoteFile(file).catch((err) => console.warn("Import failed", err));
       input.value = "";
     });
     document.body.appendChild(input);
-    btn.addEventListener("click", () => input.click());
+    btn.addEventListener("click", async () => {
+      if (!hasExistingNotes()) {
+        input.click();
+        return;
+      }
+      const action = await showImportConfirm();
+      if (action === "cancel") return;
+      if (action === "export-import") {
+        await exportNotesBundle().catch((err) => console.error("Notes export failed", err));
+      }
+      input.click();
+    });
   }
 
-  function applyImportedNotes() {
+  function applyImportedNotes(importedMeta = []) {
+    const currentMeta = captureSheetMeta();
+    const metaBySlug = new Map();
+    const metaById = new Map();
+    currentMeta.forEach((m) => {
+      if (m.slug) metaBySlug.set(m.slug, m);
+      if (m.id) metaById.set(m.id, m);
+    });
+
+    const findTargetMeta = (entry, fallbackId) => {
+      if (entry?.slug && metaBySlug.has(entry.slug)) return metaBySlug.get(entry.slug);
+      if (entry?.title) {
+        const match = currentMeta.find((m) => m.title === entry.title);
+        if (match) return match;
+      }
+      if (fallbackId && metaById.has(fallbackId)) return metaById.get(fallbackId);
+      return null;
+    };
+
+    const importedMetaMap = new Map();
+    importedMeta.forEach((m) => importedMetaMap.set(m.id, m));
+
+    const remappedNotes = {};
+    const remappedHighlights = {};
+
+    Object.entries(notesState.notes || {}).forEach(([oldId, val]) => {
+      const entry = importedMetaMap.get(oldId);
+      const target = findTargetMeta(entry, oldId);
+      const targetId = target?.id || oldId;
+      const changed = target && entry && entry.hash && entry.hash !== target.hash;
+      const warning = changed ? "[Warnung] Seiteninhalt hat sich seit dem Export geändert. Bitte prüfen.\n\n" : "";
+      remappedNotes[targetId] = warning + (val || "");
+    });
+
+    Object.entries(notesState.highlights || {}).forEach(([oldId, list]) => {
+      const entry = importedMetaMap.get(oldId);
+      const target = findTargetMeta(entry, oldId);
+      const targetId = target?.id || oldId;
+      remappedHighlights[targetId] = Array.isArray(list) ? list.slice() : [];
+    });
+
+    notesState.notes = remappedNotes;
+    notesState.highlights = remappedHighlights;
+    notesState.sheetMeta = currentMeta;
+    persistNotesState();
+
     sheets.forEach((sheet, idx) => {
       if (sheet.classList.contains("Titlepage")) return;
       const sheetId = sheet.id || `sheet-${idx + 1}`;
@@ -627,6 +679,142 @@ export function createNotesFeature(ctx, { ensureJSZip }) {
     initNoteImport,
     initHighlightContextMenu,
   };
+
+  function hasExistingNotes() {
+    const noteValues = Object.values(notesState.notes || {});
+    const highlightValues = Object.values(notesState.highlights || {});
+    const hasNotes = noteValues.some((val) => (val || "").trim().length > 0);
+    const hasHighlights = highlightValues.some((arr) => Array.isArray(arr) && arr.length > 0);
+    return hasNotes || hasHighlights;
+  }
+
+  async function handleNoteFile(file) {
+    const lower = (file.name || "").toLowerCase();
+    if (lower.endsWith(".zip")) {
+      await importFromZip(file);
+      return;
+    }
+    const text = await file.text();
+    applyParsedNotes(text);
+  }
+
+  async function importFromZip(file) {
+    await ensureJSZip();
+    if (!window.JSZip) throw new Error("JSZip unavailable for import");
+    const buf = await file.arrayBuffer();
+    const zip = await window.JSZip.loadAsync(buf);
+    let entry =
+      zip.file(/notes\.json$/i)[0] ||
+      zip.file(/\.json$/i)[0];
+    if (!entry) throw new Error("notes.json not found in zip");
+    const text = await entry.async("string");
+    applyParsedNotes(text);
+  }
+
+  function applyParsedNotes(rawText) {
+    const parsed = JSON.parse(rawText || "{}");
+    notesState = {
+      docId: parsed.docId || generateDocId(),
+      sheetMeta: Array.isArray(parsed.sheetMeta) ? parsed.sheetMeta : [],
+      notes: parsed.notes || {},
+      highlights: parsed.highlights || {},
+    };
+    persistNotesState();
+    applyImportedNotes(parsed.sheetMeta || []);
+  }
+
+  function showImportConfirm() {
+    return new Promise((resolve) => {
+      const overlay = document.createElement("div");
+      overlay.className = "notes-import-modal";
+      const dialog = document.createElement("div");
+      dialog.className = "notes-import-dialog";
+      dialog.innerHTML = `
+        <h3 class="notes-import-title">Vorhandene Notizen gefunden</h3>
+        <p class="notes-import-text">Beim Import werden aktuelle Notizen und Highlights ersetzt. Möchtest du vorher exportieren?</p>
+        <div class="notes-import-actions">
+          <button type="button" data-action="export-import" class="primary">Exportieren &amp; importieren</button>
+          <button type="button" data-action="import">Nur importieren</button>
+          <button type="button" data-action="cancel" class="ghost">Abbrechen</button>
+        </div>
+      `;
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+
+      const cleanup = (result) => {
+        overlay.remove();
+        document.removeEventListener("keydown", onKey);
+        resolve(result);
+      };
+
+      const onKey = (e) => {
+        if (e.key === "Escape") cleanup("cancel");
+      };
+      document.addEventListener("keydown", onKey);
+
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) cleanup("cancel");
+      });
+
+      dialog.querySelectorAll("button[data-action]").forEach((btn) => {
+        btn.addEventListener("click", () => cleanup(btn.dataset.action));
+      });
+    });
+  }
+
+  function captureSheetMeta() {
+    return sheets
+      .filter((s) => !s.classList.contains("Titlepage"))
+      .map((sheet) => {
+        const meta = {
+          id: sheet.id || "",
+          slug: sheet.dataset.linkSlug || slugify(sheet.dataset.link || sheet.id || ""),
+          title: sheet.querySelector("[data-toc]")?.dataset?.toc || sheet.id || "",
+        };
+        meta.hash = hashText(sheetTextContent(sheet));
+        return meta;
+      });
+  }
+
+  function sheetTextContent(sheet) {
+    const walker = document.createTreeWalker(sheet, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        if (!node.parentElement) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement.closest(".sheet-notes")) return NodeFilter.FILTER_REJECT;
+        if (!node.data || !node.data.trim()) return NodeFilter.FILTER_SKIP;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    let text = "";
+    let current;
+    while ((current = walker.nextNode())) {
+      text += current.data + " ";
+    }
+    return text.replace(/\s+/g, " ").trim();
+  }
+
+  function hashText(text) {
+    let hash = 0;
+    for (let i = 0; i < text.length; i += 1) {
+      hash = (hash * 31 + text.charCodeAt(i)) | 0;
+    }
+    return `h${(hash >>> 0).toString(16)}`;
+  }
+
+  function slugify(raw) {
+    return (raw || "")
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/['"()]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  }
+
+  function generateDocId() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    return `doc-${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 8)}`;
+  }
 
   function bindGlobalToggle() {
     const btn = document.getElementById("notes-toggle-all");

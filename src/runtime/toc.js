@@ -131,7 +131,6 @@ export function buildTocAndPageChrome(ctx) {
         sub.appendChild(subFooter);
       }
       subFooter.innerHTML = `<span class="page-footer__title">${lectureTitle}</span>`;
-      sub.appendChild(buildSelfLink(slug, page));
     });
   });
 }

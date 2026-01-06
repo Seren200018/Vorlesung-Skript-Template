@@ -38,3 +38,14 @@ Replace the tag with your release/tag:
 npm install
 npm run build
 ```
+
+## Notes import safety
+
+- Exports now include a `docId` plus per-sheet metadata (slug, title, hash). Imports remap notes to sheets by slug/title, so adding new sheets between existing ones won’t misalign notes.
+- If a sheet’s content hash changed since export, the imported note is prefixed with a warning to review it.
+- Importing still replaces existing notes/highlights. When current notes/highlights exist, a confirmation modal appears with three choices: export then import, import directly, or cancel. The modal works in both light and dark themes.
+
+## JSXGraph theme palette
+
+- Ten colorblind-friendly CSS variables are exposed for JSXGraph: `--jxg-color-1` … `--jxg-color-10`. They auto-switch between light and dark palettes via the `data-theme` attribute.
+- The demo graph reads these variables and updates on theme change; reuse them for your own curves to keep graphs consistent with the active theme.

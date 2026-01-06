@@ -10,6 +10,13 @@ export function initJsxGraphDemo(targetId) {
   const f = (x, t) => 2 + Math.sin(x + t);
   let t = 0;
 
+  const pickColor = (idx = 0) => {
+    const style = getComputedStyle(document.documentElement);
+    const val = style.getPropertyValue(`--jxg-color-${idx + 1}`) || "";
+    const clean = val.trim();
+    return clean || "#e65100";
+  };
+
   const curve = board.create(
     "curve",
     [
@@ -27,8 +34,16 @@ export function initJsxGraphDemo(targetId) {
         return ys;
       },
     ],
-    { strokeColor: "#e65100", strokeWidth: 3 }
+    { strokeColor: pickColor(0), strokeWidth: 3 }
   );
+
+  const refreshCurveColor = () => {
+    curve.setAttribute({ strokeColor: pickColor(0) });
+    board.update();
+  };
+
+  const observer = new MutationObserver(() => refreshCurveColor());
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
   // animate
   const step = () => {

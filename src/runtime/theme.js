@@ -7,6 +7,7 @@ export function initThemeSwitch(ctx) {
   const applyTheme = (mode, persist = true) => {
     const next = mode === "dark" ? "dark" : "light";
     currentTheme = next;
+    window.sheetThemeMode = next;
     body.classList.toggle("theme-dark", next === "dark");
     body.classList.toggle("theme-light", next === "light");
     document.documentElement.setAttribute("data-theme", next);
