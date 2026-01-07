@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>AV8_V1</title>
+  <link rel="icon" href="data:,">
+  <!-- MathJax setup for LaTeX rendering; tag style can be overridden in settings.js -->
+  <script>
+    MathJax = {
+      tex: {
+        tags: 'ams'  // should be 'ams', 'none', or 'all'
+      }
+    };
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css" rel="stylesheet">
+  <!-- Paper.css variant for print-ready layouts -->
+  <link href="https://latex.vercel.app/style.css" rel="stylesheet">
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script type="text/javascript" charset="UTF-8">
+    $SmjDisplayMath = [[ "\\[", "\\]" ] ];
+    $SmjExtraInlineMath = [[ "\\(", "\\)" ] ]
+  </script>
+
+  <!-- JSXGraph (interactive diagrams) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script> <!-- builds TOC, audio, print/export logic -->
+  <style>
+    .settings-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      padding: 10px 16px;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-bottom: 2px solid #1e293b;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    .settings-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .settings-group label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .settings-bar button {
+      background: #14b8a6;
+      border: none;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .settings-bar button.secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+    }
+    .settings-divider {
+      width: 1px;
+      height: 26px;
+      background: #334155;
+    }
+    .settings-bar input[type="range"] {
+      accent-color: #14b8a6;
+    }
+    @media print {
+      .settings-bar {
+        display: none !important;
+      }
+    }
+  </style>
+
+  <script type="module" crossorigin src="/Template/assets/index-O_3iUH68.js"></script>
+  <link rel="stylesheet" crossorigin href="/Template/assets/index-Dm2294z6.css">
+</head>
+
+<!-- Set "A5", "A4" or "A3" for class name -->
+<!-- Set also "landscape" if you need -->
+<!-- Body data-* attributes override settings.js defaults without editing JS -->
+<body class="A4 libertinus"
+      data-repo-url="https://github.com/Seren200018/Vorlesung-Skript-Template"
+      data-git-last-mod="2026-01-02T23:36:56+01:00"
+      data-author="Autor / Dozent"
+      data-license="CC BY-NC 4.0">
+<div class="settings-bar">
+  <div class="settings-group">
+    <button id="print-confirm" class="print-trigger">Drucken</button>
+    <button id="print-save" class="secondary print-trigger">Offline speichern</button>
+    <label><input type="checkbox" id="print-include-subsheets-yes" checked>Sub-Sheets mitdrucken</label>
+    <label><input type="checkbox" id="print-include-fullcode-main">Vollständige Codes mitdrucken</label>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group" aria-label="Audio-Modus">
+    <strong>Audio:</strong>
+    <label><input type="radio" name="audio-mode" value="off">Aus</label>
+    <label><input type="radio" name="audio-mode" value="manual" checked>Manuell</label>
+    <label><input type="radio" name="audio-mode" value="autoplay">Autoplay</label>
+    <label style="gap:6px;">
+      <span style="font-size:12px; opacity:0.9;">Lautstärke</span>
+      <input type="range" id="audio-volume" min="0" max="1" step="0.05" value="1">
+    </label>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group" aria-label="Theme">
+    <strong>Theme:</strong>
+    <label><input type="radio" name="theme-mode" value="light" checked>Hell</label>
+    <label><input type="radio" name="theme-mode" value="dark">Dunkel</label>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group">
+    <button id="notes-toggle-all" class="secondary" type="button">Notizen anzeigen/ausblenden</button>
+  </div>
+  <span class="settings-divider" aria-hidden="true"></span>
+  <div class="settings-group">
+    <button id="notes-export" class="secondary" type="button">Notizen exportieren</button>
+    <button id="notes-import" class="secondary" type="button">Notizen importieren</button>
+  </div>
+</div>
+<!-- Right-side panel that opens cloned subsheets -->
+<div id="subsheet-panel">
+  <button id="subsheet-close">✕</button>
+  <div id="subsheet-zoom">
+    <div id="subsheet-content"></div>
+  </div>
+</div>
+
+<div id="zoom-controls" class="zoom-controls" aria-label="Zoom">
+  <button id="zoom-in" type="button" title="Zoom in">+</button>
+  <button id="zoom-reset" type="button" title="Reset zoom">100%</button>
+  <button id="zoom-out" type="button" title="Zoom out">−</button>
+</div>
+
+<!-- Main printable layout; each .sheet becomes a page -->
+<div id="main-layout">
+<!-- Each sheet element should have the class "sheet" -->
+<!-- "padding-**mm" is optional: you can set 10, 15, 20 or 25 -->
+  <!-- Title page: background image plus hero metadata -->
+<section class="sheet Titlepage Background" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Intro Audio">
+  <div class="title-bg">
+    <video src="/Template/assets/bg-CVzyf8Cf.mp4" muted playsinline autoplay preload="auto" poster="/Template/assets/Titlebg-C06Xxtvj.jpg"></video>
+  </div>
+  <div class="abstract">
+    <p class="Titlepage Series">
+      Kurs / Skript
+    </p>
+    <p class="Titlepage Title"> Titel der Veranstaltung
+    </p>
+    <p class="Titlepage Subtitle">
+      Untertitel oder Beschreibung
+    </p>
+    <p
+      style="font-family: Arial, Helvetica, sans-serif;font-style: italic; color: white;position: relative; top: 12cm; line-height: 1cm; font-size: 15px; font-weight: 500;text-align:center">
+      Autor / Dozent
+    </p>
+  </div>
+</section>
+
+<!-- Repository info + print/audio/theme controls -->
+<section class="sheet libertinus padding-20mm qr-info-sheet" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Repository Audio">
+  <div class="qr-info-header">
+    <h1>Repository &amp; Metadaten</h1>
+    <p>Scan oder Link zum GitHub-Repository sowie aktuelle Build-Informationen.</p>
+  </div>
+  <div class="qr-info-grid">
+    <div class="repo-qr-card">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwAQMAAAAEm3vRAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAB8ElEQVRYhd2ZMZLDIAxFv4eCMkfIUTgaHM1H8RFSuvCg1ZfAyezupBc0IbxsIUv6X2aB76sK16GbTT9fzx21I50PO+6RMaN7HKVVJDvaHesfYAuNNdzxRc6scZfWE0+KyAqYX64sL+impwvLYNSmoWeWLLqneHE8ClmaXLp7irT/6jwgdunRDtV8M/G7bv4oU0A8V9U9MYpmNp34teJhxm1RthFk0cwmcQ0KjbcL+YXbBZnHi7Xrj2Jd3NOZZZqkYi/k0aqRsVateqO0aZKqOJpvYasiNPbGdJPUxixMaLLMttAYnXmEuyAbVF3DelYfADU1LK7EVqnaeVnEK5WNuMMLeU2sZTtcg4kHlVYTnkltMAiL3UsYt0aZTXqmBqGHxm717FD9Hd4DON2yB8ZMKAfrKvA3pd0egBCPSl0TA6a05iUmTZQonwcQGlNl7gHcO5Tuj+LSExZXK19wrPEO1Wnms87jYpalHGb6ZhYisIuZMYDHxTZYv81CzP1l/G5hTMm1cW54Cee64f5bD4zHMulxTcVtKqFxtdQx7nEjKtM1ZL4iB8WMmhdocpvFHTdC423Oa3Yj+vQLtHchr46l3V5Cds+pC2C7hZE5gDPhCI29kIvYxSH8fk0/dL4Jjof02CsTT/lvF56gfCrTcvj7+gGma/wasICbzAAAAABJRU5ErkJggg==" alt="QR-Code zum GitHub-Repository">
+      <p class="repo-qr__caption">GitHub Repository</p>
+      <a class="repo-qr__url" data-build-target="repo" href="https://github.com/Seren200018/Vorlesung-Skript-Template" target="_blank" rel="noreferrer noopener">
+        github.com/Seren200018/Vorlesung-Skript-Template
+      </a>
+    </div>
+    <div class="build-meta">
+      <h2>Build-Informationen</h2>
+      <dl>
+        <div class="build-meta__row">
+          <dt>Letzte Änderung</dt>
+          <dd data-build-target="date">–</dd>
+        </div>
+        <div class="build-meta__row">
+          <dt>Autor</dt>
+          <dd data-build-target="author">–</dd>
+        </div>
+        <div class="build-meta__row">
+          <dt>Theme-Version</dt>
+          <dd data-build-target="version">–</dd>
+        </div>
+        <div class="build-meta__row">
+          <dt>Copyright</dt>
+          <dd data-build-target="copyright">–</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- Auto-built table of contents -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Inhaltsverzeichnis Audio">
+  <article><strong>Inhaltsverzeichnis</strong></article>
+  <ol id="toc-list" class="toc-list"></ol>
+</section>
+
+<!-- Example chapter 1 (shows figure/table/DOI hooks and math rendering) -->
+<section class="sheet libertinus padding-20mm" data-symbols="F: Kraft; m: Masse; a: Beschleunigung" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 1 Audio">
+  <div class="abstract">
+    <h1 data-toc="Kapitel 1">Einleitung</h1>
+  </div>
+  <div>
+    Kurzer Einführungstext für dieses Kapitel. Beschreibe hier Inhalt oder Lernziele.
+    <span class="doi-citation"
+          data-author="Sinapius"
+          data-year="2023"
+          data-pages="S211-S244"
+          data-title="Aktive Strukturdämpfung für Leichtbausysteme"
+          data-doi="10.1000/sinapius-2023-211"></span>
+    \begin{equation}
+      F = m \cdot a
+    \end{equation}
+    <figure data-figure="Beispielabbildung 1">
+      <img src="/Template/assets/generated_video-S5CWsymX.gif" alt="Beispielbild" style="width:60mm; height:auto;">
+      <figcaption>Beispielabbildung 1</figcaption>
+    </figure>
+    <div class="image-caption" style="text-align:left; margin-bottom:2mm;"><strong>Tabelle:</strong> Beispieltabelle 1</div>
+    <table data-table="Beispieltabelle 1" style="width:100%;">
+      <tr><th>A</th><th>B</th></tr>
+      <tr><td>1</td><td>2</td></tr>
+      <tr><td>3</td><td>4</td></tr>
+      <tr><td>5</td><td>6</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- Example chapter 2 with subsheets and video/DOI hooks -->
+<section class="sheet libertinus padding-20mm" data-symbols="p: Druck; V: Volumen; T: Temperatur; n: Stoffmenge" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 2 Audio">
+  <div class="abstract">
+    <h1 data-toc="Kapitel 2">Beispielkapitel</h1>
+  </div>
+  <div>
+    Nutzen Sie diesen Bereich für Inhalte, Tabellen oder Formeln. Weitere Quellen lassen sich ebenso referenzieren wie
+    <span class="doi-citation"
+          data-author="Müller"
+          data-year="2022"
+          data-pages="S88-S104"
+          data-title="Dynamische Systeme und adaptive Regelung"
+          data-doi="10.1000/mueller-2022-88"></span>.
+    <figure class="video-entry"
+            data-video-id="dQw4w9WgXcQ"
+            data-video-title="Demo: Systemdynamik"
+            data-video-caption="Kurze Videobeschreibung">
+      <div class="video-frame"></div>
+      <figcaption>Demo: Systemdynamik</figcaption>
+    </figure>
+    \begin{equation}
+      p \cdot V = n \cdot R \cdot T
+    \end{equation}
+  </div>
+
+  <!-- Sub-page MUST be wrapped -->
+  <div class="sub-stack">
+    <div class="sub-page-wrapper" style="--i:0">
+      <div class="sub-page-sheet">
+        <div class="paper-bg"></div>
+        <div class="content">Sub-Sheet Beispiel 1</div>
+      </div>
+    </div>
+
+    <div class="sub-page-wrapper" style="--i:1">
+      <div class="sub-page-sheet">
+        <div class="paper-bg"></div>
+        <div class="content">Sub-Sheet Beispiel 2</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Rough.js Sketch Template demo -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Sketch Audio">
+  <article>Sketch Template (Rough.js)</article>
+  <figure data-figure="Skizzierte Layout-Vorlage (Rough.js)">
+    <div id="sketch-template-demo" class="sketch-template"></div>
+    <figcaption class="image-caption">Abb. 1: Skizzierte Layout-Vorlage (Rough.js)</figcaption>
+  </figure>
+</section>
+
+<!-- Mass-Spring-Damper Sketch -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="MSD Audio">
+  <article>Mass-Spring-Damper (Rough.js)</article>
+  <figure data-figure="Skizzierte Masse-Feder-Dämpfer">
+    <div id="msd-sketch" class="sketch-template"></div>
+    <figcaption class="image-caption">Abb. 2: Skizzierte Masse-Feder-Dämpfer</figcaption>
+  </figure>
+</section>
+
+<!-- JSXGraph animated demo -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="JSXGraph Audio">
+  <article>JSXGraph Animation*</article>
+  <figure data-figure="Animierter Graph (JSXGraph)">
+    <div id="jsx-graph-demo" style="width: 120mm; height: 80mm; border: 1px dashed #ccc;"></div>
+    <figcaption class="image-caption">Abb. 3: Animierter Graph (JSXGraph) <small>*JSXGraph</small></figcaption>
+  </figure>
+</section>
+
+<!-- Python integration demo: short preview + expandable full script -->
+<section class="sheet libertinus padding-20mm">
+  <article>Python-Integration für Studierende</article>
+  <p>Dieses Beispiel zeigt, wie ein kurzer Ausschnitt angezeigt wird, während das komplette Skript kopiert oder eingeblendet werden kann.</p>
+  <div class="code-card python-script-block">
+    <div class="code-card__meta">
+      <span class="code-lang">Python</span>
+      <span class="code-title">CSV-Auswertung</span>
+    </div>
+    <pre class="code-preview"><code>import csv
+from statistics import mean
+
+with open("messwerte.csv") as fh:
+    reader = csv.DictReader(fh)
+    temperatur = [float(row["temperatur"]) for row in reader]
+
+print(f"Mittelwert: {mean(temperatur):.2f} °C")</code></pre>
+    <pre class="code-full"><code>import csv
+from pathlib import Path
+from statistics import mean
+
+
+def load_temperatures(path: Path) -> list[float]:
+    with path.open() as fh:
+        reader = csv.DictReader(fh)
+        return [float(row["temperatur"]) for row in reader if "temperatur" in row]
+
+
+def summarize(values: list[float]) -> dict[str, float]:
+    return {
+        "anzahl": len(values),
+        "minimum": min(values),
+        "maximum": max(values),
+        "mittelwert": mean(values),
+    }
+
+
+def main() -> None:
+    data_file = Path("messwerte.csv")
+    temps = load_temperatures(data_file)
+    summary = summarize(temps)
+    print("Temperaturauswertung")
+    for key, val in summary.items():
+        if isinstance(val, float):
+            print(f"{key:>10}: {val:.2f}")
+        else:
+            print(f"{key:>10}: {val}")
+
+    # Bewegter Durchschnitt über Fenster
+    window = 5
+    moving_avg = []
+    for idx in range(len(temps)):
+        start = max(0, idx - window + 1)
+        chunk = temps[start : idx + 1]
+        moving_avg.append(mean(chunk))
+    print("\nGleitender Mittelwert (letzte 5 Messpunkte):")
+    for i, val in enumerate(moving_avg, start=1):
+        print(f"{i:>3}: {val:>7.2f}")
+
+    # Einfache Anomalie-Erkennung
+    threshold = summary["mittelwert"] + 2.5
+    anomalies = [(i, t) for i, t in enumerate(temps, start=1) if t > threshold]
+    if anomalies:
+        print("\nAuffällige hohe Werte:")
+        for idx, val in anomalies:
+            print(f"  Messung {idx}: {val:.2f} °C")
+    else:
+        print("\nKeine auffälligen Werte gefunden.")
+
+    # Export als einfache Textzusammenfassung
+    report = Path("temperatur_report.txt")
+    lines = [
+        "Temperaturreport",
+        f"Datei: {data_file.name}",
+        f"Anzahl: {summary['anzahl']}",
+        f"Minimum: {summary['minimum']:.2f}",
+        f"Maximum: {summary['maximum']:.2f}",
+        f"Mittelwert: {summary['mittelwert']:.2f}",
+        "",
+        "Gleitender Mittelwert:",
+    ]
+    lines.extend(f"{i}: {val:.2f}" for i, val in enumerate(moving_avg, start=1))
+    lines.append("")
+    lines.append("Anomalien:")
+    if anomalies:
+        lines.extend(f"{idx}: {val:.2f}" for idx, val in anomalies)
+    else:
+        lines.append("keine")
+    report.write_text("\n".join(lines), encoding="utf-8")
+    print(f"\nReport gespeichert in {report.resolve()}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+    <p class="code-hint">Tipp: Mit dem Button kopieren Studierende das ganze Skript, auch wenn nur der Ausschnitt sichtbar ist.</p>
+  </div>
+</section>
+
+<!-- Blank sheet for further content -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Blank Audio">
+</section>
+
+<!-- Auto-filled figure/table/video/literature lists -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Abbildungs- und Tabellenverzeichnis Audio">
+  <article><strong>Abbildungsverzeichnis</strong></article>
+  <ol id="fig-list" class="toc-list"></ol>
+  <article><strong>Tabellenverzeichnis</strong></article>
+  <ol id="table-list" class="toc-list"></ol>
+</section>
+
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Videoliste Audio">
+  <article><strong>Videoliste</strong></article>
+  <ol id="video-list" class="toc-list video-list"></ol>
+</section>
+
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Literaturverzeichnis Audio">
+  <article><strong>Literaturverzeichnis</strong></article>
+  <ol id="literature-list" class="literature-list"></ol>
+</section>
+
+<!-- Print modal -->
+<div id="print-modal" class="print-modal" hidden>
+  <div class="print-modal__dialog">
+    <h3>Drucken/Speichern</h3>
+    <label class="print-modal__option">
+      <input type="checkbox" id="print-include-subsheets" checked>
+      Sub-Sheets mitdrucken
+    </label>
+    <label class="print-modal__option">
+      <input type="checkbox" id="print-include-fullcode">
+      Vollständige Codes nach den Sheets mitdrucken
+    </label>
+    <div class="print-modal__actions">
+      <button id="print-save" type="button">Offline speichern</button>
+      <button id="print-confirm" type="button">Drucken</button>
+      <button id="print-cancel" type="button">Abbrechen</button>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>

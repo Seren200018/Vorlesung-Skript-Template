@@ -23,13 +23,13 @@ const copyDir = async (source, target) => {
 };
 
 const main = async () => {
-  const audioDir = path.resolve(root, "Audio");
+  const audioDir = path.resolve(root, "audio");
   try {
-    await copyDir(audioDir, path.join(distDir, "Audio"));
-    console.log(`Copied Audio/ into ${path.relative(root, distDir)}/`);
+    await copyDir(audioDir, path.join(distDir, "audio"));
+    console.log(`Copied audio/ into ${path.relative(root, distDir)}/`);
   } catch (error) {
     if (error.code === "ENOENT") {
-      console.log("Audio/ not found; skipping static copy.");
+      console.log("audio/ not found; skipping static copy.");
       return;
     }
     throw error;

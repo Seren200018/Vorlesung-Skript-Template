@@ -59,7 +59,7 @@ Quick reference for how the template’s core runtime pieces work and what you c
 - Prefer adding data attributes on sheets instead of editing runtime code. Key ones:
   - `data-toc="Title"`: marks an element (typically an `h1`) to be included in the TOC; the first occurrence per sheet sets the page header/footer chapter label.
   - `data-symbols="F: Kraft; m: Masse"`: adds a left-side symbol column for that sheet, parsed as `symbol: description` pairs separated by semicolons.data-toc, data-symbols, data-audio-*, data-link
-  - `data-audio-src="Audio/file.mp3"` and `data-audio-title="Label"` on a sheet: registers sheet audio; footer controls are injected automatically.
+  - `data-audio-src="audio/file.mp3"` and `data-audio-title="Label"` on a sheet: registers sheet audio; footer controls are injected automatically.
   - `data-link="custom-slug"` on a sheet: forces the anchor slug used for self-linking and TOC jumps (otherwise derived from TOC title or sheet id).
 - Use `window.sheetThemeMode` and CSS variables for theme-aware custom widgets.
 - Keep new DOM injected elements outside `.sheet-notes` to avoid conflicts with text/highlight walkers.
