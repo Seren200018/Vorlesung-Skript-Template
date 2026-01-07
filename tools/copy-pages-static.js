@@ -5,7 +5,8 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, "..");
-const distDir = path.resolve(root, "dist-pages");
+const outDirArg = process.argv[2];
+const distDir = path.resolve(root, outDirArg || "dist-pages");
 
 const copyDir = async (source, target) => {
   await fs.mkdir(target, { recursive: true });
@@ -25,7 +26,7 @@ const main = async () => {
   const audioDir = path.resolve(root, "Audio");
   try {
     await copyDir(audioDir, path.join(distDir, "Audio"));
-    console.log("Copied Audio/ into dist-pages/");
+    console.log(`Copied Audio/ into ${path.relative(root, distDir)}/`);
   } catch (error) {
     if (error.code === "ENOENT") {
       console.log("Audio/ not found; skipping static copy.");

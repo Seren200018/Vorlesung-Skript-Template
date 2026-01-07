@@ -22,6 +22,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:pages": "vite build --config vite.pages.config.js && node tools/copy-pages-static.js",
+    "build:template": "vite build --config vite.pages.template.config.js && node tools/copy-pages-static.js dist-template",
     "preview": "vite preview",
     "build:offline": "node tools/offline-pack.js",
     "prepare": "npm run build"
