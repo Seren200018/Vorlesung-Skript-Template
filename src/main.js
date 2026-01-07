@@ -1,3 +1,5 @@
+import "./settings.js";
+import "./symbol-settings.js";
 import initTemplate from "./template.js";
 import { renderRoughTemplate, renderMassSpringDamper } from "./rough-template.js";
 import { initJsxGraphDemo } from "./jsx-graph-demo.js";
