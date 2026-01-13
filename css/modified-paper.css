@@ -999,7 +999,7 @@ body.theme-dark .cc-badge {
   max-width: 90mm;
   height: 120mm;
   margin: 6mm auto 0;
-  border: 1px dashed #ccc;
+  border: none;
   padding: 4mm;
   box-sizing: border-box;
 }

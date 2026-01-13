@@ -3,6 +3,7 @@ import "./symbol-settings.js";
 import initTemplate from "./template.js";
 import { renderRoughTemplate, renderMassSpringDamper } from "./rough-template.js";
 import { initJsxGraphDemo } from "./jsx-graph-demo.js";
+import { initMassSpringDamperAnchorsDemo } from "./msd-anchors-demo.js";
 
 window.addEventListener("DOMContentLoaded", () => {
   initTemplate();
@@ -27,6 +28,11 @@ window.addEventListener("DOMContentLoaded", () => {
       damperLabel: "c",
       forceLabel: "F(t)",
     });
+  }
+
+  const msdAnchorDemo = document.getElementById("msd-anchor-demo");
+  if (msdAnchorDemo) {
+    initMassSpringDamperAnchorsDemo(msdAnchorDemo);
   }
 
   const jsxDemo = document.getElementById("jsx-graph-demo");

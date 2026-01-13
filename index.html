@@ -301,12 +301,62 @@
   </figure>
 </section>
 
+<!-- Mass-Spring-Damper Anchors Demo -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="MSD Anchors">
+  <article>Mass-Spring-Damper (Anchors)</article>
+  <figure data-figure="Ankerpunkt-Demo">
+    <div id="msd-anchor-demo" class="sketch-template"></div>
+    <figcaption class="image-caption">Abb. 3: Ankerpunkt bewegt die Masse, Feder und Daempfer passen sich an.</figcaption>
+  </figure>
+  <div class="sub-stack">
+    <div class="sub-page-wrapper" style="--i:0">
+      <div class="sub-page-sheet">
+        <div class="paper-bg"></div>
+        <div class="content">
+          <h2> Herleitung Mehrmassenschwinger State Space</h2>
+          Als Basis für die Zustandsraumdarstellung dient die Bewegungsgleichung des Mehrmassenschwingers.<br>
+         \begin{aligned}
+          \overrightarrow{F}(t) &= \left[ M \right]\overrightarrow{\ddot{X}}+\left[ C \right]\overrightarrow{\dot{X}}+\left[ K \right]\overrightarrow{X}\\
+          \overrightarrow{\ddot{X}} &= -\left[ C \right]\left[ M \right]^{-1} \overrightarrow{\dot{X}}-\left[ K \right]\left[ M \right]^{-1}\overrightarrow{X}+\overrightarrow{F}(t)\left[ M \right]^{-1}\\ 
+         \end{aligned}<br>
+         Aus dieser Gleichung kann die Zustandsraum Darstellung hergeleitet werden.<br>
+          \begin{aligned}
+          \overset{\dot{\vec{u}}(t+\Delta t)}{\begin{pmatrix}
+    \ddot{\vec{x}}(t+\Delta t)\\
+    \dot{\vec{x}}(t+\Delta t)
+\end{pmatrix}}= \overset{\left[A\right]}{\begin{bmatrix}
+    {-C\left[ M \right]^{-1}} & {-K\left[ M \right]^{-1}}\\
+     \left[ I \right]& \left[ 0 \right]
+\end{bmatrix} }\overset{\vec{u}(t)}{\begin{pmatrix}
+    \dot{\vec{x}} \\
+    \vec{x}
+\end{pmatrix}} + \overset{\vec{F}_{SP}}{\begin{pmatrix}\vec{F}(t)\\\vec{0} \end{pmatrix}}\overset{\left[B\right]}{\begin{pmatrix} \left[M\right]^{-1}\\\left[0\right] \end{pmatrix}}
+          \end{aligned} <br>
+          Mit der Rücktransformation der Zustandsvektoren:
+          \begin{aligned}
+          \begin{pmatrix}
+    \dot{\vec{x}} \\
+    \vec{x}
+\end{pmatrix} &= \left[
+    I
+\right]   
+    \vec{u}
+\\
+          \end{aligned}<br>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
 <!-- JSXGraph animated demo -->
 <section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="JSXGraph Audio">
   <article>JSXGraph Animation*</article>
   <figure data-figure="Animierter Graph (JSXGraph)">
     <div id="jsx-graph-demo" style="width: 120mm; height: 80mm; border: 1px dashed #ccc;"></div>
-    <figcaption class="image-caption">Abb. 3: Animierter Graph (JSXGraph) <small>*JSXGraph</small></figcaption>
+    <figcaption class="image-caption">Abb. 4: Animierter Graph (JSXGraph) <small>*JSXGraph</small></figcaption>
   </figure>
 </section>
 
