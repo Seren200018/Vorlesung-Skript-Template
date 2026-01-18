@@ -1,8 +1,17 @@
 import rough from "roughjs/bundled/rough.esm.js";
-import { MassSpringDamper, MultiMassSpringDamperTimeSystem } from "./Spring_Mass_Damper_Elements.js";
+import { MassSpringDamper, MultiMassSpringDamperTimeSystem,MassSpringDamperSystemTimeFreqDomainHandmade } from "./Spring_Mass_Damper_Elements.js";
+import { create, all } from "mathjs";
+
+const math = create(all);
+
 
 export function initMassSpringDamperAnchorsDemo(target) {
   if (!target) return;
+
+  if (target._msdAnchorsCleanup) {
+    target._msdAnchorsCleanup();
+    target._msdAnchorsCleanup = null;
+  }
 
   target.innerHTML = "";
   const wrap = document.createElement("div");
@@ -82,11 +91,28 @@ export function initMassSpringDamperAnchorsDemo(target) {
     },
   });
 
-  const MSDTimeSystem = new MultiMassSpringDamperTimeSystem({mass: [0.1,1.0], spring: [10,50], damper: [1,10], NumMasses: 2, TimeStep: 0.016});
 
+  //Bottom Mass Setup
+  const BottomMass = 1.0;
+  const BottomDamping = 0.2;
+  const BottomStiffness = (1.0*2*Math.PI*1.0)**2 ; //1Hz Resonance
+
+  //initial Top Mass Setup
   let topMass = 1.0;
-  let topDamping = 0.2;
-  let topStiffness = 1.0;
+  let topDamping = 0.05;
+  let topStiffness = 0.1;
+
+  let C_Matrix = math.matrix([[BottomDamping + topDamping, -topDamping], [-topDamping, topDamping]]);
+  let K_Matrix = math.matrix([[BottomStiffness + topStiffness, -topStiffness], [-topStiffness, topStiffness]]);
+  let M_Matrix = math.matrix([[BottomMass, 0], [0, topMass]]);
+
+  const MSDTimeSystem2 = new MassSpringDamperSystemTimeFreqDomainHandmade({Massmatrix: M_Matrix, Stiffnessmatrix: K_Matrix, Dampingmatrix: C_Matrix, StartingPositions: [0.5, 0], StartingVelocities: [0, 0], NumMasses: 2});
+  
+  let ForceAmplitude = math.matrix([0.1, 0]);
+    
+  MSDTimeSystem2.AppliedForceParameters = {ForceType:"sine",Amplitude: ForceAmplitude, ForceFrequency: 1.0};
+
+  //Force Setup 
   let forceFrequency = 1.6;
 
   const formatValue = (value, step) => {
@@ -95,6 +121,7 @@ export function initMassSpringDamperAnchorsDemo(target) {
     return value.toFixed(decimals);
   };
 
+  
   const createSlider = ({ label, min, max, step, value, onInput }) => {
     const row = document.createElement("label");
     row.style.display = "flex";
@@ -119,24 +146,17 @@ export function initMassSpringDamperAnchorsDemo(target) {
     return input;
   };
 
-  const updateTopLabels = () => {
-    msdTop.labels.massCenter = `m2`;
-    msdTop.labels.damperRight = `c2`;
-    msdTop.labels.springLeft = `k2`;
-  };
-
-  updateTopLabels();
-
   createSlider({
-    label: "Top mass",
-    min: 0.1,
-    max: 5,
-    step: 0.1,
+    label: "Masse Tilger",
+    min: 0.01,
+    max: 2,
+    step: 0.01,
     value: topMass,
     onInput: (value) => {
       topMass = value;
     },
   });
+
   createSlider({
     label: "Top damping",
     min: 0,
@@ -147,20 +167,23 @@ export function initMassSpringDamperAnchorsDemo(target) {
       topDamping = value;
     },
   });
+
   createSlider({
-    label: "Top stiffness",
-    min: 0.1,
-    max: 10,
-    step: 0.1,
+    label: "Resonanzfrequenz Tilger",
+    min: 0.5,
+    max: 2,
+    step: 0.01,
     value: topStiffness,
+
     onInput: (value) => {
-      topStiffness = value;
+      topStiffness = topMass * (2 * Math.PI * value) ** 2;
     },
   });
+
   createSlider({
     label: "Force frequency",
-    min: 0.2,
-    max: 6,
+    min: 0.1,
+    max: 2,
     step: 0.1,
     value: forceFrequency,
     onInput: (value) => {
@@ -215,43 +238,58 @@ export function initMassSpringDamperAnchorsDemo(target) {
   };
 
   let start = performance.now();
+  let laststeptime = null;
+  let animationId = null;
+  let disposed = false;
+
+  const cleanup = () => {
+    disposed = true;
+    if (animationId != null) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+  };
+  target._msdAnchorsCleanup = cleanup;
+  if (import.meta?.hot) {
+    import.meta.hot.dispose(cleanup);
+  }
+
   const animate = (now) => {
+    if (disposed) {
+      return;
+    }
     const t = (now - start) / 1000;
 
-    MSDTimeSystem.setMass([1.0, topMass]); //[Bottom mass (fixed), Top mass (variable)]
-    MSDTimeSystem.setDamping([0.5, topDamping]); //[Ground damping (fixed), Between-masses damping (variable)]
-    MSDTimeSystem.setStiffness([20, topStiffness]); //[Ground stiffness (fixed), Between-masses stiffness (variable)]
- 
+    let C_Matrix = math.matrix([[BottomDamping + topDamping, -topDamping], [-topDamping, topDamping]]);
+    let K_Matrix = math.matrix([[BottomStiffness + topStiffness, -topStiffness], [-topStiffness, topStiffness]]);
     
-    let Force = 0.1*Math.sin(t * forceFrequency) * 2.0; //Apply force to bottom mass
+    //Set new parameters
+    MSDTimeSystem2.setDampingmatrix(C_Matrix);
+    MSDTimeSystem2.setStiffnessmatrix(K_Matrix);
 
-    MSDTimeSystem.applyForce(0, Force); //Apply force to bottom mass
-
-
-    MSDTimeSystem.step(now); 
+    let force = MSDTimeSystem2.calcForceAtTime(t);
     
-    let Newposition = MSDTimeSystem.positions;
+    let NewMSDState = MSDTimeSystem2.stepSimulation((now-(laststeptime || now))/1000.0);
+    laststeptime = now;
 
+    let Newposition2 = NewMSDState.position.toArray();
 
     ctx.clearRect(0, 0, width, height);
-
-    const position = 0.5 + Math.sin(t * forceFrequency) * 0.25;
-    const position2 = 0.5 + Math.cos(t * forceFrequency) * 0.25;
 
     const lowerTop = msdBottom.getAnchorPoint("massTop", 0.5);
 
     msdTop.ground.x = lowerTop.x - msdTop.ground.width / 2;
     msdTop.ground.y = lowerTop.y;
 
-    msdBottom.setForceArrow({ length: Force*100 });
-    msdBottom.render(ctx, rc, { shadow: true, shadowOffset: 6 }, Newposition[0]+0.5);
-    msdTop.render(ctx, rc, { shadow: true, shadowOffset: 6 }, Newposition[1]+0.5);
-    msdBottom.render(ctx, rc, {}, Newposition[0]+0.5);
-    msdTop.render(ctx, rc, {}, Newposition[1]+0.5);
-  //  drawMassAnchors(msdBottom);
+    msdBottom.setForceArrow({ length: force[0]*100 });
+    msdBottom.render(ctx, rc, { shadow: true, shadowOffset: 6 }, Newposition2[0]+0.5);
+    msdTop.render(ctx, rc, { shadow: true, shadowOffset: 6 }, Newposition2[1]+0.5);
+    msdBottom.render(ctx, rc, {}, Newposition2[0]+0.5);
+    msdTop.render(ctx, rc, {}, Newposition2[1]+0.5);
+    //drawMassAnchors(msdBottom);
 
-    window.requestAnimationFrame(animate);
+    animationId = window.requestAnimationFrame(animate);
   };
 
-  window.requestAnimationFrame(animate);
+  animationId = window.requestAnimationFrame(animate);
 }

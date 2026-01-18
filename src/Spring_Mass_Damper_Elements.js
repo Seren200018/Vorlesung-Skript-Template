@@ -1,151 +1,9 @@
+import { forEach } from "jszip";
+import { isMatrix } from "mathjs";
+import { re } from "mathjs";
 import { create, all } from "mathjs";
 
 const math = create(all);
-
-class Matrix extends Array {
-  constructor(rows = 0, cols = rows, setInitial = true) {
-    super(rows * cols);
-    this.rows = rows || 0;
-    this.cols = cols || this.rows;
-    this.length = this.rows * this.cols;
-    if (setInitial) {
-      if (this.rows === this.cols) {
-        this.setIdentityData();
-      } else {
-        this.setEmptyData();
-      }
-    }
-  }
-
-  static add(...matrices) {
-    const first = matrices.shift();
-    const output = first.clone();
-    output.add(...matrices);
-    return output;
-  }
-
-  static multiply(...matrices) {
-    const first = matrices.shift();
-    const output = first.clone();
-    for (const m of matrices) {
-      output.multiply(m);
-    }
-    return output;
-  }
-
-  setEmptyData() {
-    for (let i = 0; i < this.length; i++) this[i] = 0;
-    return this;
-  }
-
-  setIdentityData() {
-    for (let i = 0; i < this.length; i++) {
-      this[i] = i % (this.cols + 1) ? 0 : 1;
-    }
-    return this;
-  }
-
-  setData(data, rows, cols) {
-    const values = Array.isArray(data) ? data : Array.from(arguments);
-    const nextRows = rows ?? this.rows;
-    const nextCols = cols ?? this.cols;
-    this.rows = nextRows;
-    this.cols = nextCols;
-    this.length = nextRows * nextCols;
-    for (let i = 0; i < this.length; i++) {
-      this[i] = values[i] ?? 0;
-    }
-    return this;
-  }
-
-  toArray() {
-    return Array.from(this);
-  }
-
-  clone() {
-    const copy = new Matrix(this.rows, this.cols, false);
-    copy.setData(this.toArray(), this.rows, this.cols);
-    return copy;
-  }
-
-  add(...args) {
-    for (const value of args) {
-      if (typeof value === "number") {
-        for (let i = 0; i < this.length; i++) this[i] += value;
-        continue;
-      }
-      for (let i = 0; i < this.length; i++) {
-        this[i] += value[i] ?? 0;
-      }
-    }
-    return this;
-  }
-
-  multiply(value) {
-    if (typeof value === "number") {
-      for (let i = 0; i < this.length; i++) this[i] *= value;
-      return this;
-    }
-
-    const b = value;
-    const aRows = this.rows;
-    const aCols = this.cols;
-    const bRows = b.rows ?? 0;
-    const bCols = b.cols ?? 0;
-    if (aCols !== bRows) return this;
-
-    const result = new Array(aRows * bCols).fill(0);
-    for (let r = 0; r < aRows; r++) {
-      for (let c = 0; c < bCols; c++) {
-        let sum = 0;
-        for (let k = 0; k < aCols; k++) {
-          sum += this[r * aCols + k] * (b[k * bCols + c] ?? 0);
-        }
-        result[r * bCols + c] = sum;
-      }
-    }
-
-    this.rows = aRows;
-    this.cols = bCols;
-    this.length = result.length;
-    for (let i = 0; i < result.length; i++) this[i] = result[i];
-    return this;
-  }
-
-  invert() {
-    const inv = math.inv(this._to2DArray());
-    const invArray = typeof inv?.toArray === "function" ? inv.toArray() : inv;
-    return this._from2DArray(invArray);
-  }
-
-  _to2DArray() {
-    const out = new Array(this.rows);
-    for (let r = 0; r < this.rows; r++) {
-      const row = new Array(this.cols);
-      for (let c = 0; c < this.cols; c++) {
-        row[c] = this[r * this.cols + c] ?? 0;
-      }
-      out[r] = row;
-    }
-    return out;
-  }
-
-  _from2DArray(array) {
-    const rows = array.length;
-    const cols = rows ? array[0].length : 0;
-    this.rows = rows;
-    this.cols = cols;
-    this.length = rows * cols;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        this[r * cols + c] = array[r][c];
-      }
-    }
-    return this;
-  }
-}
-
-const matrixmath = { Matrix };
 
 
 export class Mass {
@@ -848,33 +706,263 @@ export class MassSpringDamper {
   }
 }
 
-export class MassSpringDamperSystemTimeFreqDomainHandmade{ //Input should be math.matrizes
-  constructor({ Massmatrix = null, Dampingmatrix = null, Stiffnessmatrix = null, Maxtimestep = 1, StartingPositions = null, StartingVelocities = null } = {})  {
-    self.Massmatrix = Massmatrix;
-    self.Dampingmatrix = Dampingmatrix;
-    self.Stiffnessmatrix = Stiffnessmatrix;
-    self.Maxtimestep = Maxtimestep;
+export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be math matrices.
+  constructor({
+    Massmatrix = null,
+    Dampingmatrix = null,
+    Stiffnessmatrix = null,
+    Maxtimestep = 1,
+    StartingPositions = null,
+    StartingVelocities = null,
+  } = {}) {
+    this.Massmatrix = Massmatrix;
+    this.Dampingmatrix = Dampingmatrix;
+    this.Stiffnessmatrix = Stiffnessmatrix ? math.matrix(Stiffnessmatrix) : null;
+    this.Maxtimestep = Maxtimestep;
 
+    const size = this.Massmatrix?.size ? this.Massmatrix.size()[0] : 0;
     if (StartingPositions == null) {
-      StartingPositions = new math.matrix.zeros(self.Massmatrix.size()[0],1);
+      StartingPositions = size ? math.zeros(size, 1) : null;
     }
     if (StartingVelocities == null) {
-      StartingVelocities = new math.matrix.zeros(self.Massmatrix.size()[0],1);
+      StartingVelocities = size ? math.zeros(size, 1) : null;
     }
 
-    self.Currentposition = StartingPositions;
-    self.Currentvelocity = StartingVelocities;
+    this.Currentposition = StartingPositions;
+    this.Currentvelocity = StartingVelocities;
+
+    //System matrices
+    let A_Top = math.concat(
+      math.multiply(-1, this.Dampingmatrix, math.inv(this.Massmatrix)),
+      math.multiply(-1, this.Stiffnessmatrix, math.inv(this.Massmatrix)),
+      1
+    );
+    let A_Bottom = math.concat(
+      math.identity(size),
+      math.zeros([size, size]),
+      1
+    );
+    let A = math.concat(A_Top, A_Bottom, 0);
+
+    let B = math.multiply(math.inv(this.Massmatrix), math.ones([size, 1]));
+    B = math.concat(B, math.zeros([size, 1]), 0);
+    B = math.matrix(B)
+
+    let C_Upper = math.concat(math.identity(size), math.zeros([size, size]), 1);
+    let C_Lower = math.concat(math.zeros([size, size]), math.identity(size), 1);  
+    let C = math.concat(C_Upper, C_Lower, 0);
+
+    this._A = A;
+    this._B = B;
+    this._C = C;
+
+    this.state = math.concat(this.Currentvelocity, this.Currentposition);
+
+    this.ForceType = 'step';
+    //For steps after time 0
+    this.ForceApplicationtime1 = null;
+    this.ForceApplicationtime2 = null;
+    this.Forcefrequency = 1;
+    this.Amplitude = math.identity([size,size]) * this.Amplitude;
+
+    this.Starttime = Date.now();
+  }
+
+  reinitialize({ StartingPositions = null, StartingVelocities = null } = {}) {
+    const size = this.Massmatrix?.size ? this.Massmatrix.size()[0] : 0;
+    if (StartingPositions == null) {
+      StartingPositions = size ? math.zeros(size, 1) : null;
+    }
+    if (StartingVelocities == null) {
+      StartingVelocities = size ? math.zeros(size, 1) : null;
+    }
+
+    this.Currentposition = StartingPositions;
+    this.Currentvelocity = StartingVelocities;
+
+ 
+    this.Starttime = now();
+  }
+
+  set AppliedForceParameters({ ForceType = 'step', Amplitude = 1, ForceApplicationtime1 = null, ForceApplicationtime2 = null, Forcefrequency = 1 } = {}) {
+    this.ForceType = ForceType;
+    this.Amplitude = Amplitude;
+    this.ForceApplicationtime1 = ForceApplicationtime1;
+    this.ForceApplicationtime2 = ForceApplicationtime2;
+    this.Forcefrequency = Forcefrequency;
+  }
+
+  setMassmatrix(Massmatrix) {
+    if (isMatrix(Massmatrix)) {
+      this.Massmatrix = Massmatrix;
+    } else {
+      throw new Error('Massmatrix must be a math matrix');
+    }
+  }
+  setDampingmatrix(Dampingmatrix) {
+    if (isMatrix(Dampingmatrix)) {
+      this.Dampingmatrix = Dampingmatrix;
+    } else {
+      throw new Error('Dampingmatrix must be a math matrix');
+    }     
+    this.Dampingmatrix = Dampingmatrix;
+  }
+  setStiffnessmatrix(Stiffnessmatrix) {
+    if (isMatrix(Stiffnessmatrix)) {
+      this.Stiffnessmatrix = Stiffnessmatrix;
+    } else {
+      throw new Error('Stiffnessmatrix must be a math matrix');
+    }     
+    this.Stiffnessmatrix = Stiffnessmatrix;
+  }
+
+
+
+
+  _timewithintimeframe(t,t1,t2)
+  {
+    if ((t1 != null)  && (t2 != null))
+    {
+      return (t >= t1) && (t <= t2);
+    }
+    else if (t1 != null)
+    {
+      return (t >= t1);
+    }
+    else if (t2 != null)
+    {
+      return (t <= t2);
+    }
+  }
+  calcForceAtTime(t) {
+    let force = math.zeros(this.Massmatrix.size()[0], 1);
+    if (this.ForceType === 'step') {
+      if (this.ForceApplicationtime1 != null && t >= this.ForceApplicationtime1) {
+        force = math.add(force, math.multiply(this.Amplitude, 1));
+      }
+    } else if (this.ForceType === 'impulse') {
+      if (this.ForceApplicationtime1 != null && Math.abs(t - this.ForceApplicationtime1) < 1e-6) {
+        force = math.add(force, math.multiply(this.Amplitude, 1));
+      }
+    } else if (this.ForceType === 'sine') {
+
+        force =  math.multiply(this.Amplitude, Math.sin(2 * Math.PI * this.Forcefrequency * t)).toArray();
+      
+    }
+    return force;
+  } 
   
-    //Generate State Space Matrices A and B
-    const A = math.zeros(self.Massmatrix.size()[0]*2,self.Massmatrix.size()[0]*2); 
+  getFullTimeFunction(timesteps, whichmass, resulttype = 'position') {
+    const size = timesteps.length;
+    let positions = math.zeros(size, self.Massmatrix.size()[0]);
+    let velocities = math.zeros(size, self.Massmatrix.size()[0]);
 
-    
-  }  
+    positions[0] = this.Currentposition;
+    velocities[0] = this.Currentvelocity;
 
 
+    for (let index = 1; index < size; index++) {
+      let f = this.calcForceAtTime(timesteps[index]); //calculate force at time
 
+      //calculate new state
+      let state = math.concat(positions[index - 1], velocities[index - 1], 0);
+      let dt = timesteps[index] - timesteps[index - 1];
+      let Adt = math.add(math.identity(state.size()[0]), math.multiply(this._A, dt));
+      let Bdt = math.multiply(this._B, dt);
+      let newstate = math.add(math.multiply(Adt, state), math.multiply(Bdt, f));
+      
+      //update positions and velocities
+      positions[index] = newstate.subset(math.index(math.range(0, this.Massmatrix.size()[0]), 0));
+      velocities[index] = newstate.subset(math.index(math.range(this.Massmatrix.size()[0], 2 * this.Massmatrix.size()[0]), 0));
+
+    }
+        
+    if (resulttype === 'position') {
+      return positions.map((row) => row[whichmass]);
+    } else if (resulttype === 'velocity') {
+      return velocities.map((row) => row[whichmass]);
+    } else {
+      throw new Error(`Invalid resulttype: ${resulttype}`);
+    } 
+   }
+
+   getBodePlotData(frequencyRange, whichmass, resulttype = 'magnitude') {
+    const size = frequencyRange.length;
+    let magnitudes = new Array(size).fill(0);
+    let phases = new Array(size).fill(0);
+
+    for (let index = 0; index < size; index++) {
+      const freq = frequencyRange[index];
+      const omega = 2 * Math.PI * freq;
+      const I = math.complex(0, 1);
+      const s = math.multiply(I, omega);
+
+      const Ms = math.add(this.Stiffnessmatrix, math.multiply(s, this.Dampingmatrix), math.multiply(s, s, this.Massmatrix));
+      const MsInv = math.inv(Ms);
+      const H = MsInv;
+
+      const H_elem = H.subset(math.index(whichmass, whichmass));
+      const magnitude = math.abs(H_elem);
+      const phase = math.arg(H_elem) * (180 / Math.PI);
+
+      magnitudes[index] = magnitude;
+      phases[index] = phase;
+    }
+
+    if (resulttype === 'magnitude') {
+      return magnitudes;
+    } else if (resulttype === 'phase') {
+      return phases;
+    } else {
+      throw new Error(`Invalid resulttype: ${resulttype}`);
+    }
+  }   
+
+    stepSimulation(timestep) {
+
+      let f = this.calcForceAtTime(timestep).concat(math.flatten(math.zeros(this.Massmatrix.size()[0],1).toArray()));
+
+      //let state = math.concat(this.Currentvelocity, this.Currentposition);
+
+      const CalculateStatechange = (t, currentstate) => {
+        let newstate = math.multiply(this._A ,math.transpose(currentstate));
+        
+        let newstate2 = math.dotMultiply(math.matrix(math.flatten(this._B).toArray()), f);
+        return( math.flatten(math.add(math.flatten(newstate), newstate2)).toArray());
+
+        //newstate = math.add(this.state, math.multiply(newstate, dt));
+      }
+
+      let dt = timestep; 
+      let result = math.solveODE(CalculateStatechange,[0,dt],[this.state]);
+      this.state = math.flatten(result.y[result.y.length - 1]);
+
+      //let newstate = math.multiply(this._A , math.matrix(this.state));
+      //let newstate2 = math.flatten(math.dotMultiply(math.matrix(this._B),math.matrix( f) ));
+      //newstate = math.add(newstate, newstate2);
+      //newstate = math.add(this.state, math.multiply(newstate, dt));
+
+      let veloAndPos = math.multiply(this._C, math.transpose( this.state ));
+      veloAndPos = math.flatten(veloAndPos);
+
+      const size = this.Massmatrix.size()[0];
+      this.Currentvelocity = math.subset(
+        veloAndPos,
+        math.index(math.range(0, size))
+      );
+
+      this.Currentposition   = math.subset(
+      veloAndPos,
+      math.index(math.range(size, 2 * size))
+    );
+      return {
+        position: this.Currentposition,
+        velocity: this.Currentvelocity,
+      };      
+  }   
 
 }
+
 
 export class MultiMassSpringDamperTimeSystem {
   constructor({ Mass = 1, Damping = 0.2, Stiffness = 1, NumMasses = 3, TimeStep = 0.02 } = {}) {
