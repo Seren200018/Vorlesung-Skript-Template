@@ -111,6 +111,33 @@ export function renderRoughTemplate(target, cfg = {}) {
   subtitle.textContent = cfg.subtitle || "Rough.js example";
   svg.appendChild(subtitle);
 
+  // color reference for line styles
+  const legendItems = [
+    { label: "Frame", color: palette.frame },
+    { label: "Accent", color: palette.accent },
+    { label: "Text", color: palette.text },
+  ];
+  const legendX = width - 180;
+  const legendY = height - 70;
+  legendItems.forEach((item, idx) => {
+    const y = legendY + idx * 18;
+    svg.appendChild(
+      rc.line(legendX, y, legendX + 24, y, {
+        stroke: item.color,
+        strokeWidth: 2,
+        roughness: 1.2,
+      })
+    );
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", legendX + 32);
+    label.setAttribute("y", y + 4);
+    label.setAttribute("fill", palette.text);
+    label.setAttribute("font-size", "12");
+    label.setAttribute("font-family", "Arial, Helvetica, sans-serif");
+    label.textContent = item.label;
+    svg.appendChild(label);
+  });
+
   return svg;
 }
 

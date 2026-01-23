@@ -1028,6 +1028,10 @@ figcaption {
   line-height: 1.35;
 }
 
+#MSD_Anchor_leftmost_Div figcaption.image-caption {
+  margin-top: 1mm;
+}
+
 figcaption strong,
 .image-caption strong {
   font-size: inherit;

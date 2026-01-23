@@ -24,4 +24,17 @@ window.TemplateSettings = {
   author: "Autor / Dozent",
   license: "CC BY-NC 4.0",
   version: "0.1.0",
+
+  // JSXGraph defaults (used by bode plots).
+  jsxGraphColors: {
+    axis: "#333",
+    m1: "#1f77b4",
+    m2: "#d62728",
+    reference: "#6c757d",
+    resonance: "#6c757d",
+    antiResonance: "#2e7d32",
+    excitation: "#f57c00",
+    background: "#fff",
+    border: "#ddd",
+  },
 };

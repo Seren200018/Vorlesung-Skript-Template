@@ -31,8 +31,9 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   const msdAnchorDemo = document.getElementById("msd-anchor-demo");
+  
   if (msdAnchorDemo) {
-    initMassSpringDamperAnchorsDemo(msdAnchorDemo);
+    initMassSpringDamperAnchorsDemo(msdAnchorDemo, {bodeTargetId: "MSD_Anchor_middle_Div", controlsTargetId:"MSD_Anchor_rightmost_Div"});
   }
 
   const jsxDemo = document.getElementById("jsx-graph-demo");

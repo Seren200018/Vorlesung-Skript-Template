@@ -6,9 +6,29 @@ import { create, all } from "mathjs";
 const math = create(all);
 
 
-export function initMassSpringDamperAnchorsDemo(target) {
+export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   // Entry point: build the UI and start the animation loop.
   if (!target) return;
+
+  const templateSettings = window.TemplateSettings || {};
+  const jsxColors = templateSettings.jsxGraphColors || {};
+  const pickJxgColor = (idx, fallback) => {
+    const style = getComputedStyle(document.documentElement);
+    const val = style.getPropertyValue(`--jxg-color-${idx}`) || "";
+    const clean = val.trim();
+    return clean || fallback;
+  };
+  const bodeColors = {
+    axis: jsxColors.axis || "#333",
+    m1: pickJxgColor(1, jsxColors.m1 || "#1f77b4"),
+    m2: pickJxgColor(2, jsxColors.m2 || "#d62728"),
+    reference: pickJxgColor(3, jsxColors.reference || "#6c757d"),
+    resonance: pickJxgColor(3, jsxColors.resonance || "#6c757d"),
+    antiResonance: pickJxgColor(5, jsxColors.antiResonance || "#2e7d32"),
+    excitation: pickJxgColor(4, jsxColors.excitation || "#f57c00"),
+    background: jsxColors.background || "#fff",
+    border: jsxColors.border || "#ddd",
+  };
 
   // Cleanup any prior instance attached to the same DOM node.
   if (target._msdAnchorsCleanup) {
@@ -16,60 +36,93 @@ export function initMassSpringDamperAnchorsDemo(target) {
     target._msdAnchorsCleanup = null;
   }
 
-  // --- Layout: left visualization column + right controls column ---
-  target.innerHTML = "";
-  const wrap = document.createElement("div");
-  wrap.style.display = "flex";
-  wrap.style.gap = "12px";
-  wrap.style.alignItems = "stretch";
-  wrap.style.height = "100%";
-  wrap.style.width = "100%";
-  target.appendChild(wrap);
+  // --- Layout: visualization + bode + controls columns ---
+  const bodeTarget =
+    options.bodeTarget ||
+    (typeof options.bodeTargetId === "string"
+      ? document.getElementById(options.bodeTargetId)
+      : null);
+  const controlsTarget =
+    options.controlsTarget ||
+    (typeof options.controlsTargetId === "string"
+      ? document.getElementById(options.controlsTargetId)
+      : null);
 
-  // Visualization column (canvas + bode plot).
+  target.innerHTML = "";
+  let wrap = null;
+  if (!bodeTarget || !controlsTarget || bodeTarget === target || controlsTarget === target) {
+    wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.gap = "9px";
+    wrap.style.alignItems = "stretch";
+    wrap.style.height = "100%";
+    wrap.style.width = "100%";
+    target.appendChild(wrap);
+  }
+
+  // Visualization column (canvas only).
   const viz = document.createElement("div");
   viz.style.display = "flex";
   viz.style.flexDirection = "column";
-  viz.style.gap = "12px";
-  viz.style.width = "360px";
-  viz.style.height = "110%";
+  viz.style.gap = "1px";
+  viz.style.width = "100%";
+  viz.style.height = "120%";
   viz.style.flex = "0 0 auto";
-  wrap.appendChild(viz);
+  (wrap || target).appendChild(viz);
 
   // Canvas for the roughjs MSD drawing.
   const canvas = document.createElement("canvas");
   canvas.style.width = "100%";
-  canvas.style.height = "auto";
+  canvas.style.height = "100%";
   canvas.style.flex = "1 1 0";
   canvas.style.border = "none";
   viz.appendChild(canvas);
 
-  // Bode plot row (plot + legend).
-  const bodeRow = document.createElement("div");
-  bodeRow.style.display = "flex";
-  bodeRow.style.gap = "8px";
-  bodeRow.style.alignItems = "stretch";
-  bodeRow.style.flex = "0 0 210px";
-  viz.appendChild(bodeRow);
+  // Bode column (plot + legend).
+  const bodePane = document.createElement("div");
+  bodePane.style.display = "flex";
+  bodePane.style.flexDirection = "column";
+  bodePane.style.gap = "8px";
+  bodePane.style.flex = "0 0 300px";
+  bodePane.style.height = "100%";
+  (wrap || bodeTarget || target).appendChild(bodePane);
+
+  // Legend row (line legend + frequency legend).
+  const bodeLegendRow = document.createElement("div");
+  bodeLegendRow.style.display = "flex";
+  bodeLegendRow.style.alignItems = "flex-start";
+  bodeLegendRow.style.justifyContent = "flex-start";
+  bodeLegendRow.style.gap = "16px";
+  bodeLegendRow.style.padding = "0 6px";
+  bodePane.appendChild(bodeLegendRow);
+
+  // Line legend (left).
+  const bodeLegend = document.createElement("div");
+  bodeLegend.style.display = "flex";
+  bodeLegend.style.flexDirection = "column";
+  bodeLegend.style.gap = "6px";
+  bodeLegend.style.fontSize = "11px";
+  bodeLegend.style.color = "#333";
+  bodeLegendRow.appendChild(bodeLegend);
+
+  // Frequency legend (right).
+  const bodeFreqLegend = document.createElement("div");
+  bodeFreqLegend.style.display = "flex";
+  bodeFreqLegend.style.flexDirection = "column";
+  bodeFreqLegend.style.gap = "2px";
+  bodeFreqLegend.style.fontSize = "11px";
+  bodeFreqLegend.style.color = "#333";
+  bodeFreqLegend.style.alignItems = "flex-end";
+  bodeLegendRow.appendChild(bodeFreqLegend);
 
   // Bode plot container (jsxgraph board).
   const bodeMount = document.createElement("div");
   bodeMount.id = `msd-bode-${Math.random().toString(36).slice(2)}`;
   bodeMount.style.flex = "1 1 auto";
-  bodeMount.style.height = "210px";
-  bodeMount.style.border = "1px solid #ddd";
-  bodeMount.style.background = "#fff";
-  bodeRow.appendChild(bodeMount);
-
-  // Legend container (kept outside the plot).
-  const bodeLegend = document.createElement("div");
-  bodeLegend.style.display = "flex";
-  bodeLegend.style.flexDirection = "column";
-  bodeLegend.style.gap = "6px";
-  bodeLegend.style.minWidth = "90px";
-  bodeLegend.style.fontSize = "11px";
-  bodeLegend.style.color = "#333";
-  bodeRow.appendChild(bodeLegend);
+  bodeMount.style.height = "250px";
+  bodeMount.style.border = "none";
+  bodeMount.style.background = bodeColors.background;
+  bodePane.appendChild(bodeMount);
 
   const createLegendItem = (label, color, dashed = false) => {
     const row = document.createElement("div");
@@ -92,20 +145,20 @@ export function initMassSpringDamperAnchorsDemo(target) {
     return row;
   };
 
-  const legendM1 = createLegendItem("m1", "#1f77b4");
-  const legendM2 = createLegendItem("m2", "#d62728");
-  const legendRef = createLegendItem("m1 ref", "#6c757d", true);
+  const legendM1 = createLegendItem("m1", bodeColors.m1);
+  const legendM2 = createLegendItem("m2", bodeColors.m2);
+  const legendRef = createLegendItem("m1 ref", bodeColors.reference, true);
 
   // Controls column (toggle + sliders + reset).
   const controls = document.createElement("div");
   controls.style.display = "flex";
   controls.style.flexDirection = "column";
   controls.style.gap = "8px";
-  controls.style.minWidth = "160px";
+  controls.style.minWidth = "100px";
   controls.style.fontFamily = "Arial, Helvetica, sans-serif";
   controls.style.fontSize = "12px";
   controls.style.color = "#111";
-  wrap.appendChild(controls);
+  (wrap || controlsTarget || target).appendChild(controls);
 
   // Rendering state for the canvas + bode board.
   const ctx = canvas.getContext("2d");
@@ -173,12 +226,12 @@ export function initMassSpringDamperAnchorsDemo(target) {
 
 
   // --- Tuned mass defaults ---
-  let topMass = 1;
+  let topMass = 0.1;
   let topDamping = 0.001;
   let TunedMassDamperEigenFreq = 1;
   let topStiffness = topMass * (2 * Math.PI * TunedMassDamperEigenFreq) ** 2;
   let tunedMassDamperEnabled = true;
-  const defaultPositions = [0, 0.2];
+  const defaultPositions = [0, 0];
   const defaultVelocities = [0, 0];
   let forceFrequency = 1.0;
   const forceFrequencyRange = { min: 0, max: 2, step: 0.1 };
@@ -257,6 +310,8 @@ export function initMassSpringDamperAnchorsDemo(target) {
     input.max = max;
     input.step = step;
     input.value = value;
+    input.style.width = "100%";
+    input.style.boxSizing = "border-box";
     input.addEventListener("input", () => {
       const next = parseFloat(input.value);
       valueSpan.textContent = formatValue(next, step);
@@ -374,8 +429,8 @@ export function initMassSpringDamperAnchorsDemo(target) {
   // Tuned mass sliders (disabled when TMD is off).
   topMassControl = createSlider({
     label: "Masse Tilger [kg]",
-    min: 0.01,
-    max: 2,
+    min: 0.05,
+    max: 1,
     step: 0.01,
     value: topMass,
     onInput: (value) => {
@@ -688,7 +743,7 @@ export function initMassSpringDamperAnchorsDemo(target) {
     bodeBoard.suspendUpdate();
 
     // Axes and tick marks.
-    const axisColor = "#333";
+    const axisColor = bodeColors.axis;
     const xAxis = bodeBoard.create("axis", [[xMin, yMin], [xMax, yMin]], {
       strokeColor: axisColor,
       ticks: { visible: false },
@@ -727,19 +782,19 @@ export function initMassSpringDamperAnchorsDemo(target) {
 
     // Curves: main response, tuned mass response, and reference.
     bodeBoard.create("curve", [frequencies, magDb1], {
-      strokeColor: "#1f77b4",
+      strokeColor: bodeColors.m1,
       strokeWidth: 2,
     });
     if (magDb2.length) {
       bodeBoard.create("curve", [frequencies, magDb2], {
-        strokeColor: "#d62728",
+        strokeColor: bodeColors.m2,
         strokeWidth: 2,
       });
     }
     if (magDbRef.length) {
       bodeBoard.create("curve", [frequencies, magDbRef], {
-        strokeColor: "#6c757d",
-        strokeWidth: 1.5,
+        strokeColor: bodeColors.reference,
+        strokeWidth: 1,
         dash: 2,
       });
     }
@@ -755,28 +810,66 @@ export function initMassSpringDamperAnchorsDemo(target) {
       bodeBoard.create("segment", [[freq, yMin], [freq, yMax]], {
         strokeColor: color,
         dash,
-        strokeWidth: 1.5,
+        strokeWidth: 1.0,
       });
       bodeBoard.create("text", [freq, labelY, label], {
         anchorX: "middle",
         anchorY: "top",
+        useMathjax: true,
         fixed: true,
-        fontSize: 11,
+        fontSize: 13,
         strokeColor: color,
+        background: "rgba(255, 255, 255, 0.5)",
+        cssStyle: 'background: rgba(255, 255, 255, 0.7);'
+      });
+    };
+    const addBottomMarker = (freq, label, color) => {
+      const y = yMin + (yMax - yMin) * 0.015;
+      bodeBoard.create("text", [freq, y, label], {
+        anchorX: "middle",
+        anchorY: "bottom",
+        useMathjax: true,
+        fixed: true,
+        fontSize: 13,
+        strokeColor: color,
+        background: "rgba(255, 255, 255, 0.5)",
+        cssStyle: "background: rgba(255, 255, 255, 0.7); padding: 0 1px; line-height: 0.4; display: inline-block;",
       });
     };
 
     resonanceInRange.forEach((freq, index) => {
-      addMarker(freq, `f${index + 1}=${formatHz(freq)} Hz`, "#6c757d", 2);
+      addMarker(freq, `$$f_{R${index + 1}}$$`, bodeColors.resonance, 1);
     });
     if (antiResonance != null) {
-      addMarker(antiResonance, `f_ar=${formatHz(antiResonance)} Hz`, "#2e7d32", 2);
+      addBottomMarker(antiResonance, "$$f_{AR}$$", bodeColors.antiResonance);
     }
+
+    // Frequency list above the bode plot.
+    bodeFreqLegend.innerHTML = "";
+    const addFreqLabel = (label, value, color) => {
+      const row = document.createElement("div");
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = `\\(${label}\\)`;
+      const valueSpan = document.createElement("span");
+      valueSpan.textContent = `=${formatHz(value)} Hz`;
+      row.appendChild(labelSpan);
+      row.appendChild(valueSpan);
+      row.style.color = color;
+      bodeFreqLegend.appendChild(row);
+      requestMathTypeset([labelSpan]);
+    };
+    resonanceInRange.forEach((freq, index) => {
+      addFreqLabel(`f_{R${index + 1}}`, freq, bodeColors.resonance);
+    });
+    if (antiResonance != null) {
+      addFreqLabel("f_{AR}", antiResonance, bodeColors.antiResonance);
+    }
+    bodeFreqLegend.style.display = bodeFreqLegend.childElementCount ? "flex" : "none";
 
     // Current excitation frequency marker.
     const excitationFrequency = Math.min(xMax, Math.max(xMin, forceFrequency));
     bodeBoard.create("segment", [[excitationFrequency, yMin], [excitationFrequency, yMax]], {
-      strokeColor: "#f57c00",
+      strokeColor: bodeColors.excitation,
       strokeWidth: 2,
     });
 
