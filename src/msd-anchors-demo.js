@@ -94,13 +94,14 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   bodeLegendRow.style.justifyContent = "flex-start";
   bodeLegendRow.style.gap = "16px";
   bodeLegendRow.style.padding = "0 6px";
+  bodeLegendRow.style.minHeight = "52px";
   bodePane.appendChild(bodeLegendRow);
 
   // Line legend (left).
   const bodeLegend = document.createElement("div");
   bodeLegend.style.display = "flex";
   bodeLegend.style.flexDirection = "column";
-  bodeLegend.style.gap = "6px";
+  bodeLegend.style.gap = "2px";
   bodeLegend.style.fontSize = "11px";
   bodeLegend.style.color = "#333";
   bodeLegendRow.appendChild(bodeLegend);
@@ -113,6 +114,7 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   bodeFreqLegend.style.fontSize = "11px";
   bodeFreqLegend.style.color = "#333";
   bodeFreqLegend.style.alignItems = "flex-end";
+  bodeFreqLegend.style.minHeight = "44px";
   bodeLegendRow.appendChild(bodeFreqLegend);
 
   // Bode plot container (jsxgraph board).
@@ -147,7 +149,7 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
 
   const legendM1 = createLegendItem("m1", bodeColors.m1);
   const legendM2 = createLegendItem("m2", bodeColors.m2);
-  const legendRef = createLegendItem("m1 ref", bodeColors.reference, true);
+  const legendRef = createLegendItem("Kein Tilger", bodeColors.reference, true);
 
   // Controls column (toggle + sliders + reset).
   const controls = document.createElement("div");
@@ -781,27 +783,29 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     });
 
     // Curves: main response, tuned mass response, and reference.
-    bodeBoard.create("curve", [frequencies, magDb1], {
-      strokeColor: bodeColors.m1,
-      strokeWidth: 2,
-    });
     if (magDb2.length) {
       bodeBoard.create("curve", [frequencies, magDb2], {
         strokeColor: bodeColors.m2,
-        strokeWidth: 2,
+        strokeWidth: 1,
       });
+
+    bodeBoard.create("curve", [frequencies, magDb1], {
+      strokeColor: bodeColors.m1,
+      strokeWidth: 1.5,
+    });
+
     }
     if (magDbRef.length) {
       bodeBoard.create("curve", [frequencies, magDbRef], {
         strokeColor: bodeColors.reference,
-        strokeWidth: 1,
+        strokeWidth: 0.5,
         dash: 2,
       });
     }
 
     // Toggle legend items based on active curves.
-    legendM2.style.display = magDb2.length ? "flex" : "none";
-    legendRef.style.display = magDbRef.length ? "flex" : "none";
+    legendM2.style.visibility = magDb2.length ? "visible" : "hidden";
+    legendRef.style.visibility = magDbRef.length ? "visible" : "hidden";
 
     // Markers for resonances and anti-resonance.
     const labelY = yMax - (yMax - yMin) * 0.04;
@@ -864,7 +868,7 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     if (antiResonance != null) {
       addFreqLabel("f_{AR}", antiResonance, bodeColors.antiResonance);
     }
-    bodeFreqLegend.style.display = bodeFreqLegend.childElementCount ? "flex" : "none";
+    bodeFreqLegend.style.visibility = bodeFreqLegend.childElementCount ? "visible" : "hidden";
 
     // Current excitation frequency marker.
     const excitationFrequency = Math.min(xMax, Math.max(xMin, forceFrequency));
