@@ -731,30 +731,7 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
     this.Currentposition = StartingPositions;
     this.Currentvelocity = StartingVelocities;
 
-    //System matrices
-    let A_Top = math.concat(
-      math.multiply(-1, this.Dampingmatrix, math.inv(this.Massmatrix)),
-      math.multiply(-1, this.Stiffnessmatrix, math.inv(this.Massmatrix)),
-      1
-    );
-    let A_Bottom = math.concat(
-      math.identity(size),
-      math.zeros([size, size]),
-      1
-    );
-    let A = math.concat(A_Top, A_Bottom, 0);
-
-    let B = math.multiply(math.inv(this.Massmatrix), math.ones([size, 1]));
-    B = math.concat(B, math.zeros([size, 1]), 0);
-    B = math.matrix(B)
-
-    let C_Upper = math.concat(math.identity(size), math.zeros([size, size]), 1);
-    let C_Lower = math.concat(math.zeros([size, size]), math.identity(size), 1);  
-    let C = math.concat(C_Upper, C_Lower, 0);
-
-    this._A = A;
-    this._B = B;
-    this._C = C;
+    this._buildStateSpace();
 
     this.state = math.concat(this.Currentvelocity, this.Currentposition);
 
@@ -765,7 +742,8 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
     this.Forcefrequency = 1;
     this.Amplitude = math.identity([size,size]) * this.Amplitude;
 
-    this.Starttime = Date.now();
+    this.lastanim = 0;
+    this.Starttime = 0;
   }
 
   reinitialize({ StartingPositions = null, StartingVelocities = null } = {}) {
@@ -780,8 +758,9 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
     this.Currentposition = StartingPositions;
     this.Currentvelocity = StartingVelocities;
 
- 
-    this.Starttime = now();
+    this.state = math.flatten(math.concat(this.Currentvelocity, this.Currentposition));
+
+    this.Starttime = Date.now();
   }
 
   set AppliedForceParameters({ ForceType = 'step', Amplitude = 1, ForceApplicationtime1 = null, ForceApplicationtime2 = null, Forcefrequency = 1 } = {}) {
@@ -798,6 +777,7 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
     } else {
       throw new Error('Massmatrix must be a math matrix');
     }
+    this._buildStateSpace();
   }
   setDampingmatrix(Dampingmatrix) {
     if (isMatrix(Dampingmatrix)) {
@@ -806,6 +786,7 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
       throw new Error('Dampingmatrix must be a math matrix');
     }     
     this.Dampingmatrix = Dampingmatrix;
+    this._buildStateSpace();
   }
   setStiffnessmatrix(Stiffnessmatrix) {
     if (isMatrix(Stiffnessmatrix)) {
@@ -814,10 +795,58 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
       throw new Error('Stiffnessmatrix must be a math matrix');
     }     
     this.Stiffnessmatrix = Stiffnessmatrix;
+    this._buildStateSpace();
   }
 
+  _buildStateSpace() {
+    const size = this.Massmatrix?.size ? this.Massmatrix.size()[0] : 0;
+    if (!size) {
+      this._A = null;
+      this._B = null;
+      this._C = null;
+      return;
+    }
+
+    let A_Top = math.concat(
+      math.multiply(-1, this.Dampingmatrix, math.inv(this.Massmatrix)),
+      math.multiply(-1, this.Stiffnessmatrix, math.inv(this.Massmatrix)),
+      1
+    );
+    let A_Bottom = math.concat(
+      math.identity(size),
+      math.zeros([size, size]),
+      1
+    );
+    let A = math.concat(A_Top, A_Bottom, 0);
+
+    let B = math.multiply(math.inv(this.Massmatrix), math.ones([size, 1]));
+    B = math.concat(B, math.zeros([size, 1]), 0);
+    B = math.matrix(B);
+
+    let C_Upper = math.concat(math.identity(size), math.zeros([size, size]), 1);
+    let C_Lower = math.concat(math.zeros([size, size]), math.identity(size), 1);
+    let C = math.concat(C_Upper, C_Lower, 0);
+    try{
+      this.eigs = math.eigs(A);
+    }
+    catch{
+      this.eigs = undefined;
+    }
 
 
+    this._A = A;
+    this._B = B;
+    this._C = C;
+  }
+
+  getEigenvaluesAndVectors()
+  {  
+      if (typeof this.eigs !== "undefined") {
+        return this.eigs;
+      } else {
+        return null;
+      }
+  }
 
   _timewithintimeframe(t,t1,t2)
   {
@@ -886,7 +915,7 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
     } 
    }
 
-   getBodePlotData(frequencyRange, whichmass, resulttype = 'magnitude') {
+   getBodePlotData(frequencyRange, whichmass, resulttype = 'magnitude', inputIndex = 0) {
     const size = frequencyRange.length;
     let magnitudes = new Array(size).fill(0);
     let phases = new Array(size).fill(0);
@@ -901,7 +930,7 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
       const MsInv = math.inv(Ms);
       const H = MsInv;
 
-      const H_elem = H.subset(math.index(whichmass, whichmass));
+      const H_elem = H.subset(math.index(whichmass, inputIndex));
       const magnitude = math.abs(H_elem);
       const phase = math.arg(H_elem) * (180 / Math.PI);
 
@@ -917,29 +946,37 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
       throw new Error(`Invalid resulttype: ${resulttype}`);
     }
   }   
+   
+    stepSimulation(t) {
 
-    stepSimulation(timestep) {
+      if (this.lastanim == 0) 
+        this.lastanim = t;
 
-      let f = this.calcForceAtTime(timestep).concat(math.flatten(math.zeros(this.Massmatrix.size()[0],1).toArray()));
-
+      if (this.Starttime == 0)
+        this.Starttime = t;
       //let state = math.concat(this.Currentvelocity, this.Currentposition);
 
-      const CalculateStatechange = (t, currentstate) => {
-        let newstate = math.multiply(this._A ,math.transpose(currentstate));
-        
+      const CalculateStatechange = (dt, currentstate) => {
+
+        let f = this.calcForceAtTime(t+dt).concat(math.flatten(math.zeros(this.Massmatrix.size()[0],1).toArray()));
+
+
+        let newstate = math.multiply(this._A ,math.transpose(currentstate));        
         let newstate2 = math.dotMultiply(math.matrix(math.flatten(this._B).toArray()), f);
         return( math.flatten(math.add(math.flatten(newstate), newstate2)).toArray());
 
         //newstate = math.add(this.state, math.multiply(newstate, dt));
       }
 
-      let dt = timestep; 
-      let result = math.solveODE(CalculateStatechange,[0,dt],[this.state]);
+      let dt = t-this.lastanim; 
+      if (dt > 10) dt = 10;
+      let result = math.solveODE(CalculateStatechange,[0,dt],[this.state], {maxStep:0.1});
+      this.lastanim = t;
       this.state = math.flatten(result.y[result.y.length - 1]);
 
       //let newstate = math.multiply(this._A , math.matrix(this.state));
       //let newstate2 = math.flatten(math.dotMultiply(math.matrix(this._B),math.matrix( f) ));
-      //newstate = math.add(newstate, newstate2);
+      //newstate = math.add(newstate, newstate2); 
       //newstate = math.add(this.state, math.multiply(newstate, dt));
 
       let veloAndPos = math.multiply(this._C, math.transpose( this.state ));
