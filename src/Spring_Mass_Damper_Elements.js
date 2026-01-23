@@ -739,6 +739,8 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
     //For steps after time 0
     this.ForceApplicationtime1 = null;
     this.ForceApplicationtime2 = null;
+    this.ForceRampStart = 0;
+    this.ForceRampupTime = null;
     this.Forcefrequency = 1;
     this.Amplitude = math.identity([size,size]) * this.Amplitude;
 
@@ -763,12 +765,22 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
     this.Starttime = Date.now();
   }
 
-  set AppliedForceParameters({ ForceType = 'step', Amplitude = 1, ForceApplicationtime1 = null, ForceApplicationtime2 = null, Forcefrequency = 1 } = {}) {
+  set AppliedForceParameters({
+    ForceType = 'step',
+    Amplitude = 1,
+    ForceApplicationtime1 = null,
+    ForceApplicationtime2 = null,
+    Forcefrequency = 1,
+    ForceRampStart = null,
+    ForceRampupTime = null,
+  } = {}) {
     this.ForceType = ForceType;
     this.Amplitude = Amplitude;
     this.ForceApplicationtime1 = ForceApplicationtime1;
     this.ForceApplicationtime2 = ForceApplicationtime2;
     this.Forcefrequency = Forcefrequency;
+    this.ForceRampStart = ForceRampStart;
+    this.ForceRampupTime = ForceRampupTime;
   }
 
   setMassmatrix(Massmatrix) {
@@ -874,9 +886,19 @@ export class MassSpringDamperSystemTimeFreqDomainHandmade { // Input should be m
         force = math.add(force, math.multiply(this.Amplitude, 1));
       }
     } else if (this.ForceType === 'sine') {
-
-        force =  math.multiply(this.Amplitude, Math.sin(2 * Math.PI * this.Forcefrequency * t)).toArray();
-      
+        let rampScale = 1;
+        if (Number.isFinite(this.ForceRampupTime) && this.ForceRampupTime > 0) {
+          const start = Number.isFinite(this.ForceRampStart) ? this.ForceRampStart : 0;
+          const elapsed = t - start;
+          if (elapsed <= 0) {
+            rampScale = 0;
+          } else if (elapsed < this.ForceRampupTime) {
+            const phase = (Math.PI * elapsed) / this.ForceRampupTime;
+            rampScale = 0.5 * (1 - Math.cos(phase));
+          }
+        }
+        const scaled = Math.sin(2 * Math.PI * this.Forcefrequency * t) * rampScale;
+        force = math.multiply(this.Amplitude, scaled).toArray();
     }
     return force;
   } 

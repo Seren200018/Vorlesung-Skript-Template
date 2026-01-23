@@ -81,8 +81,8 @@
     }
   </style>
 
-  <script type="module" crossorigin src="./assets/index-O_3iUH68.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-Dm2294z6.css">
+  <script type="module" crossorigin src="./assets/index-CntjHNAj.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-6OPLmkbB.css">
 </head>
 
 <!-- Set "A5", "A4" or "A3" for class name -->
@@ -146,7 +146,7 @@
 <!-- Each sheet element should have the class "sheet" -->
 <!-- "padding-**mm" is optional: you can set 10, 15, 20 or 25 -->
   <!-- Title page: background image plus hero metadata -->
-<section class="sheet Titlepage Background" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Intro Audio">
+<section class="sheet Titlepage Background" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Intro Audio">
   <div class="title-bg">
     <video src="./assets/bg-CVzyf8Cf.mp4" muted playsinline autoplay preload="auto" poster="./assets/Titlebg-C06Xxtvj.jpg"></video>
   </div>
@@ -167,7 +167,7 @@
 </section>
 
 <!-- Repository info + print/audio/theme controls -->
-<section class="sheet libertinus padding-20mm qr-info-sheet" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Repository Audio">
+<section class="sheet libertinus padding-20mm qr-info-sheet" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Repository Audio">
   <div class="qr-info-header">
     <h1>Repository &amp; Metadaten</h1>
     <p>Scan oder Link zum GitHub-Repository sowie aktuelle Build-Informationen.</p>
@@ -205,13 +205,13 @@
 </section>
 
 <!-- Auto-built table of contents -->
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Inhaltsverzeichnis Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Inhaltsverzeichnis Audio">
   <article><strong>Inhaltsverzeichnis</strong></article>
   <ol id="toc-list" class="toc-list"></ol>
 </section>
 
 <!-- Example chapter 1 (shows figure/table/DOI hooks and math rendering) -->
-<section class="sheet libertinus padding-20mm" data-symbols="F: Kraft; m: Masse; a: Beschleunigung" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 1 Audio">
+<section class="sheet libertinus padding-20mm" data-symbols="F: Kraft; m: Masse; a: Beschleunigung" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 1 Audio">
   <div class="abstract">
     <h1 data-toc="Kapitel 1">Einleitung</h1>
   </div>
@@ -241,7 +241,7 @@
 </section>
 
 <!-- Example chapter 2 with subsheets and video/DOI hooks -->
-<section class="sheet libertinus padding-20mm" data-symbols="p: Druck; V: Volumen; T: Temperatur; n: Stoffmenge" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 2 Audio">
+<section class="sheet libertinus padding-20mm" data-symbols="p: Druck; V: Volumen; T: Temperatur; n: Stoffmenge" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Kapitel 2 Audio">
   <div class="abstract">
     <h1 data-toc="Kapitel 2">Beispielkapitel</h1>
   </div>
@@ -284,7 +284,7 @@
 </section>
 
 <!-- Rough.js Sketch Template demo -->
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Sketch Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Sketch Audio">
   <article>Sketch Template (Rough.js)</article>
   <figure data-figure="Skizzierte Layout-Vorlage (Rough.js)">
     <div id="sketch-template-demo" class="sketch-template"></div>
@@ -293,7 +293,7 @@
 </section>
 
 <!-- Mass-Spring-Damper Sketch -->
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="MSD Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="MSD Audio">
   <article>Mass-Spring-Damper (Rough.js)</article>
   <figure data-figure="Skizzierte Masse-Feder-Dämpfer">
     <div id="msd-sketch" class="sketch-template"></div>
@@ -301,12 +301,66 @@
   </figure>
 </section>
 
+<!-- Mass-Spring-Damper Anchors Demo -->
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="MSD Anchors">
+  <article>Mass-Spring-Damper (Anchors)</article>
+  <figure data-figure="Ankerpunkt-Demo">
+    <div id="MSD_Anchor_leftmost_Div" style="width: 40%; height:400px; float: left;">
+      <div id="msd-anchor-demo" class="sketch-template" style="height:300px;"></div>
+    </div>
+    <div id="MSD_Anchor_middle_Div" style="width: 40%; height:360px;float: left;"></div>
+    <div id="MSD_Anchor_rightmost_Div" style="width: 20%; height:400px; float: left;"></div>
+    <figcaption class="image-caption" style="margin-top:10mm; clear: both;">Abb. 3: Ankerpunkt bewegt die Masse, Feder und Daempfer passen sich an.</figcaption>
+  </figure>
+
+  <div class="sub-stack">
+    <div class="sub-page-wrapper" style="--i:0">
+      <div class="sub-page-sheet">
+        <div class="paper-bg"></div>
+        <div class="content">
+          <h2> Herleitung Mehrmassenschwinger State Space</h2>
+          Als Basis für die Zustandsraumdarstellung dient die Bewegungsgleichung des Mehrmassenschwingers.<br>
+         \begin{aligned}
+          \overrightarrow{F}(t) &= \left[ M \right]\overrightarrow{\ddot{X}}+\left[ C \right]\overrightarrow{\dot{X}}+\left[ K \right]\overrightarrow{X}\\
+          \overrightarrow{\ddot{X}} &= -\left[ C \right]\left[ M \right]^{-1} \overrightarrow{\dot{X}}-\left[ K \right]\left[ M \right]^{-1}\overrightarrow{X}+\overrightarrow{F}(t)\left[ M \right]^{-1}\\ 
+         \end{aligned}<br>
+         Aus dieser Gleichung kann die Zustandsraum Darstellung hergeleitet werden.<br>
+          \begin{aligned}
+          \overset{\dot{\vec{u}}(t+\Delta t)}{\begin{pmatrix}
+    \ddot{\vec{x}}(t+\Delta t)\\
+    \dot{\vec{x}}(t+\Delta t)
+\end{pmatrix}}= \overset{\left[A\right]}{\begin{bmatrix}
+    {-C\left[ M \right]^{-1}} & {-K\left[ M \right]^{-1}}\\
+     \left[ I \right]& \left[ 0 \right]
+\end{bmatrix} }\overset{\vec{u}(t)}{\begin{pmatrix}
+    \dot{\vec{x}} \\
+    \vec{x}
+\end{pmatrix}} + \overset{\vec{F}_{SP}}{\begin{pmatrix}\vec{F}(t)\\\vec{0} \end{pmatrix}}\overset{\left[B\right]}{\begin{pmatrix} \left[M\right]^{-1}\\\left[0\right] \end{pmatrix}}
+          \end{aligned} <br>
+          Mit der Rücktransformation der Zustandsvektoren:
+          \begin{aligned}
+          \begin{pmatrix}
+    \dot{\vec{x}} \\
+    \vec{x}
+\end{pmatrix} &= \begin{bmatrix}  I
+\end{bmatrix}
+    \vec{u}
+\\
+          \end{aligned}<br>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
 <!-- JSXGraph animated demo -->
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="JSXGraph Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="JSXGraph Audio">
   <article>JSXGraph Animation*</article>
   <figure data-figure="Animierter Graph (JSXGraph)">
     <div id="jsx-graph-demo" style="width: 120mm; height: 80mm; border: 1px dashed #ccc;"></div>
-    <figcaption class="image-caption">Abb. 3: Animierter Graph (JSXGraph) <small>*JSXGraph</small></figcaption>
+    <figcaption class="image-caption">Abb. 4: Animierter Graph (JSXGraph) <small>*JSXGraph</small></figcaption>
   </figure>
 </section>
 
@@ -409,23 +463,23 @@ if __name__ == "__main__":
 </section>
 
 <!-- Blank sheet for further content -->
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Blank Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Blank Audio">
 </section>
 
 <!-- Auto-filled figure/table/video/literature lists -->
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Abbildungs- und Tabellenverzeichnis Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Abbildungs- und Tabellenverzeichnis Audio">
   <article><strong>Abbildungsverzeichnis</strong></article>
   <ol id="fig-list" class="toc-list"></ol>
   <article><strong>Tabellenverzeichnis</strong></article>
   <ol id="table-list" class="toc-list"></ol>
 </section>
 
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Videoliste Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Videoliste Audio">
   <article><strong>Videoliste</strong></article>
   <ol id="video-list" class="toc-list video-list"></ol>
 </section>
 
-<section class="sheet libertinus padding-20mm" data-audio-src="Audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Literaturverzeichnis Audio">
+<section class="sheet libertinus padding-20mm" data-audio-src="audio/Allegro de Concert Op. 46 in A Major.mp3" data-audio-title="Literaturverzeichnis Audio">
   <article><strong>Literaturverzeichnis</strong></article>
   <ol id="literature-list" class="literature-list"></ol>
 </section>

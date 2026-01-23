@@ -1,6 +1,9 @@
 import rough from "roughjs/bundled/rough.esm.js";
-import * as JXG from "jsxgraph";
-import { MassSpringDamper, MultiMassSpringDamperTimeSystem,MassSpringDamperSystemTimeFreqDomainHandmade } from "./Spring_Mass_Damper_Elements.js";
+import {
+  MassSpringDamper,
+  MultiMassSpringDamperTimeSystem,
+  MassSpringDamperSystemTimeFreqDomainHandmade,
+} from "./Spring_Mass_Damper_Elements.js";
 import { create, all } from "mathjs";
 
 const math = create(all);
@@ -9,6 +12,12 @@ const math = create(all);
 export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   // Entry point: build the UI and start the animation loop.
   if (!target) return;
+
+  const JXG = window.JXG;
+  if (!JXG || !JXG.JSXGraph) {
+    console.warn("JSXGraph not found. Include jsxgraphcore.js before initializing the demo.");
+    return;
+  }
 
   const templateSettings = window.TemplateSettings || {};
   const jsxColors = templateSettings.jsxGraphColors || {};
@@ -49,8 +58,10 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
       : null);
 
   target.innerHTML = "";
+  const useWrap =
+    !bodeTarget || !controlsTarget || bodeTarget === target || controlsTarget === target;
   let wrap = null;
-  if (!bodeTarget || !controlsTarget || bodeTarget === target || controlsTarget === target) {
+  if (useWrap) {
     wrap = document.createElement("div");
     wrap.style.display = "flex";
     wrap.style.gap = "9px";
@@ -82,8 +93,13 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   const bodePane = document.createElement("div");
   bodePane.style.display = "flex";
   bodePane.style.flexDirection = "column";
+  bodePane.style.alignItems = "flex-start";
   bodePane.style.gap = "8px";
-  bodePane.style.flex = "0 0 300px";
+  if (useWrap) {
+    bodePane.style.flex = "0 0 300px";
+  } else {
+    bodePane.style.width = "100%";
+  }
   bodePane.style.height = "100%";
   (wrap || bodeTarget || target).appendChild(bodePane);
 
@@ -120,7 +136,8 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   // Bode plot container (jsxgraph board).
   const bodeMount = document.createElement("div");
   bodeMount.id = `msd-bode-${Math.random().toString(36).slice(2)}`;
-  bodeMount.style.flex = "1 1 auto";
+  bodeMount.style.flex = "0 0 auto";
+  bodeMount.style.width = "100%";
   bodeMount.style.height = "250px";
   bodeMount.style.border = "none";
   bodeMount.style.background = bodeColors.background;
@@ -149,7 +166,7 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
 
   const legendM1 = createLegendItem("m1", bodeColors.m1);
   const legendM2 = createLegendItem("m2", bodeColors.m2);
-  const legendRef = createLegendItem("Kein Tilger", bodeColors.reference, true);
+  const legendRef = createLegendItem("Kein Tilger", bodeColors.m2, true);
 
   // Controls column (toggle + sliders + reset).
   const controls = document.createElement("div");
@@ -237,6 +254,8 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   const defaultVelocities = [0, 0];
   let forceFrequency = 1.0;
   const forceFrequencyRange = { min: 0, max: 2, step: 0.1 };
+  const forceRampStart = 0;
+  const forceRampupTime = 10.0;
 
   // --- Initial matrices for the 2-DOF model ---
   let C_Matrix = math.matrix([[BottomDamping + topDamping, -topDamping], [-topDamping, topDamping]]);
@@ -263,6 +282,8 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     ForceType: "sine",
     Amplitude: ForceAmplitude,
     Forcefrequency: forceFrequency,
+    ForceRampStart: forceRampStart,
+    ForceRampupTime: forceRampupTime,
   };
 
   // --- MathJax helper for inline labels ---
@@ -405,6 +426,17 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     topFreqControl.input.disabled = disabled;
     topDampingControl.input.disabled = disabled;
   };
+  const resetSimulation = () => {
+    const now = performance.now();
+    StartTime = now;
+    LastTime = now;
+    MSDTimeSystem2.reinitialize({
+      StartingPositions: defaultPositions,
+      StartingVelocities: defaultVelocities,
+    });
+    MSDTimeSystem2.lastanim = 0;
+    MSDTimeSystem2.Starttime = 0;
+  };
 
   // --- Controls: TMD switch + reset + sliders ---
   createToggleSwitch({
@@ -412,7 +444,7 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     checked: tunedMassDamperEnabled,
     onChange: (enabled) => {
       tunedMassDamperEnabled = enabled;
-      MSDTimeSystem2.reinitialize([0,0],[0,0])
+      resetSimulation();
       updateTmdControls();
     },
   });
@@ -424,7 +456,7 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
   resetButton.style.padding = "4px 8px";
   resetButton.style.fontSize = "12px";
   resetButton.addEventListener("click", () => {
-    MSDTimeSystem2.reinitialize([0, 0], [0, 0]);
+    resetSimulation();
   });
   controls.appendChild(resetButton);
 
@@ -517,6 +549,8 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
       ForceType: "sine",
       Amplitude: ForceAmplitude,
       Forcefrequency: forceFrequency,
+      ForceRampStart: forceRampStart,
+      ForceRampupTime: forceRampupTime,
     };
 
     lastTopMass = topMass;
@@ -788,16 +822,14 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
         strokeColor: bodeColors.m2,
         strokeWidth: 1,
       });
-
+    }
     bodeBoard.create("curve", [frequencies, magDb1], {
       strokeColor: bodeColors.m1,
       strokeWidth: 1.5,
     });
-
-    }
     if (magDbRef.length) {
       bodeBoard.create("curve", [frequencies, magDbRef], {
-        strokeColor: bodeColors.reference,
+        strokeColor: bodeColors.m1,
         strokeWidth: 0.5,
         dash: 2,
       });
@@ -878,8 +910,25 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     });
 
     // Allow clicking on the bode plot to set frequency (with snap).
+    const getScaledUserCoords = (evt) => {
+      const scaleText = getComputedStyle(document.documentElement)
+        .getPropertyValue("--sheet-scale")
+        .trim();
+      const scale = Number.parseFloat(scaleText) || 1;
+      const rect = bodeMount.getBoundingClientRect();
+      const x = (evt.clientX - rect.left) / scale;
+      const y = (evt.clientY - rect.top) / scale;
+      if (!bodeBoard?.origin?.scrCoords) {
+        return bodeBoard.getUsrCoordsOfMouse(evt);
+      }
+      const origin = bodeBoard.origin.scrCoords;
+      const usrX = (x - origin[1]) / bodeBoard.unitX;
+      const usrY = (origin[2] - y) / bodeBoard.unitY;
+      return [usrX, usrY];
+    };
+
     bodeBoard.on("down", (evt) => {
-      const coords = bodeBoard.getUsrCoordsOfMouse(evt);
+      const coords = getScaledUserCoords(evt);
       if (!coords || coords.length < 2) {
         return;
       }
@@ -888,7 +937,7 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
         return;
       }
       const clamped = Math.min(bodeConfig.freqMax, Math.max(bodeConfig.freqMin, rawFreq));
-      MSDTimeSystem2.reinitialize([0,0],[0,0]);
+      resetSimulation();
       updateForceFrequency(clamped, { snap: true });
     });
 
@@ -906,8 +955,9 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const bodeRect = bodeMount.getBoundingClientRect();
-    bodeWidth = bodeRect.width;
-    bodeHeight = bodeRect.height;
+    const bodeStyles = getComputedStyle(bodeMount);
+    bodeWidth = bodeRect.width || parseFloat(bodeStyles.width) || 300;
+    bodeHeight = bodeRect.height || parseFloat(bodeStyles.height) || 250;
     if (bodeBoard) {
       bodeBoard.resizeContainer(bodeWidth, bodeHeight);
     }
@@ -976,14 +1026,14 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     import.meta.hot.dispose(cleanup);
   }
 
-  let LastTime = Date.now();
+  let LastTime = performance.now();
   let StartTime = LastTime;
   // Main animation loop: update state, redraw MSD + bode.
   const animate = (now) => {
     if (disposed) {
       return;
     }
-    const t = (LastTime - StartTime) / 1000;
+    const t = (now - StartTime) / 1000;
 
     // Sync model matrices if any inputs changed.
     syncSystemParameters();
@@ -995,8 +1045,8 @@ export function initMassSpringDamperAnchorsDemo(target, options = {}) {
     // Advance the simulation and fetch the new positions.
     let force = MSDTimeSystem2.calcForceAtTime(t);
     
-    let NewMSDState = MSDTimeSystem2.stepSimulation(Date.now()/1000.0);
-    LastTime = Date.now();
+    let NewMSDState = MSDTimeSystem2.stepSimulation(t);
+    LastTime = now;
 
     let Newposition2 = NewMSDState.position.toArray();
 
