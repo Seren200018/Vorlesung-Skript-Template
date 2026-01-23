@@ -39,7 +39,8 @@
     "plotly.js-dist": "^2.35.3",
     "plotly.js-dist-min": "^2.35.3",
     "react": "^19.0.0",
-    "react-router-dom": "^7.4.0",
+    "react-router": "^7.13.0",
+    "react-router-dom": "^7.13.0",
     "roughjs": "^4.6.6",
     "vivus": "^0.4.6"
   },
